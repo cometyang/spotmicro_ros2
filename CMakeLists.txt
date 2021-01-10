@@ -18,6 +18,8 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(spotmicro REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 find_package(rosidl_default_generators REQUIRED)
@@ -26,6 +28,17 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "src/spotmicro/msg/Num.msg"
   "src/spotmicro/srv/AddThreeInts.srv"
  )
+ add_executable(talker src/spotmicro/src/publish_member_function.cpp)
+ ament_target_dependencies(talker rclcpp spotmicro)         # CHANGE
+ 
+ add_executable(listener src/spotmicro/src/subscriber_member_function.cpp)
+ ament_target_dependencies(listener rclcpp spotmicro)  
+ 
+ install(TARGETS
+   talker
+   listener
+   DESTINATION lib/${PROJECT_NAME})
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -19,14 +19,26 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(spotmicro REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
-find_package(rosidl_default_generators REQUIRED)
-
+find_package(rosidl_default_generators REQUIRED)  # message_generation in ROS1
+find_package(rosidl_default_runtime REQUIRED)              # message_runtime in ROS1
+find_package(sensor_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "src/spotmicro/msg/Num.msg"
+  "src/spotmicro/msg/JointAngles.msg"
+  "src/spotmicro/msg/JointPulse.msg"
+  "src/spotmicro/msg/AgentData.msg"
+  "src/spotmicro/msg/IMUdata.msg"
+  "src/spotmicro/msg/MiniCmd.msg"
+  "src/spotmicro/msg/JoyButtons.msg"
+  "src/spotmicro/msg/ContactData.msg"
   "src/spotmicro/srv/AddThreeInts.srv"
+  "src/spotmicro/srv/CalibServo.srv"
  )
  add_executable(talker src/spotmicro/src/publish_member_function.cpp)
  ament_target_dependencies(talker rclcpp spotmicro)         # CHANGE
@@ -39,6 +51,18 @@ rosidl_generate_interfaces(${PROJECT_NAME}
    listener
    DESTINATION lib/${PROJECT_NAME})
 
+   add_executable(server src/spotmicro/src/add_three_ints_server.cpp)
+   ament_target_dependencies(server
+     rclcpp spotmicro)                      #CHANGE
+   
+   add_executable(client src/spotmicro/src/add_three_ints_client.cpp)
+   ament_target_dependencies(client
+   rclcpp spotmicro)    
+   
+   install(TARGETS
+   server
+   client
+   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

@@ -615,11 +615,6 @@ static void _init(const char* filename)
   RCLCPP_INFO(g_node->get_logger(), "I2C bus opened on %s", filename);
 }
 
-
-
-
-
-
 // ------------------------------------------------------------------------------------------------------------------------------------
 /**@}*/
 /**
@@ -649,19 +644,20 @@ static void _init(const char* filename)
    rosservice call /set_pwm_frequency "{value: 50}"
    \endcode
  */
-bool set_pwm_frequency(i2cpwmboard::srv::IntValue::Request& req, i2cpwmboard::srv::IntValue::Response& res)
+bool set_pwm_frequency(std::shared_ptr<i2cpwmboard::srv::IntValue::Request> req,
+                       std::shared_ptr<i2cpwmboard::srv::IntValue::Response> res)
 {
   int freq;
-  freq = req.value;
+  freq = req->value;
   if ((freq < 12) || (freq > 1024))
   {
     RCLCPP_ERROR(g_node->get_logger(), "Invalid PWM frequency %d :: PWM frequencies should be between 12 and 1024",
                  freq);
     freq = 50;  // most analog RC servos are designed for 20ms pulses.
-    res.error = freq;
+    res->error = freq;
   }
   _set_pwm_frequency(freq);  // I think we must reset frequency when we change boards
-  res.error = freq;
+  res->error = freq;
   return true;
 }
 
@@ -869,190 +865,32 @@ static double _get_float_param(XmlRpc::XmlRpcValue obj, std::string param_name)
   return 0;
 }
 
-// static int _load_params (void)
-// {
-//     auto nhp = rclcpp::Node::make_shared("i2cpwm_oard");
-// 	//ros::NodeHandle nhp;					// not currently private namespace
 
-// 	// default I2C device on RPi2 and RPi3 = "/dev/i2c-1" Orange Pi Lite = "/dev/i2c-0"
-// 	nhp->get_parameter( ("i2c_device_number", _controller_io_device, 1);
-// 	std::stringstream device;
-// 	device << "/dev/i2c-" << _controller_io_device;
-// 	_init (device.str().c_str());
 
-// 	_set_active_board (1);
 
-// 	int pwm;
-// 	nhp.param ("pwm_frequency", pwm, 50);
-// 	_set_pwm_frequency (pwm);
-
-// 	/*
-// 	  // note: servos are numbered sequntially with '1' being the first servo on board #1, '17' is the first servo on
-// board #2 	  servo_config:
-// 	  	- {servo: 1, center: 333, direction: -1, range: 100}
-// 		- {servo: 2, center: 336, direction: 1, range: 108}
-// 	*/
-// 	// attempt to load configuration for servos
-// 	if(nhp.hasParam ("servo_config")) {
-// 		XmlRpc::XmlRpcValue servos;
-// 		nhp.getParam ("servo_config", servos);
-
-// 		if(servos.getType() == XmlRpc::XmlRpcValue::TypeArray) {
-// 			RCLCPP_DEBUG(g_node->get_logger(),"Retrieving members from 'servo_config' in namespace(%s)",
-// nhp.getNamespace().c_str());
-
-// 			for(int32_t i = 0; i < servos.size(); i++) {
-// 				XmlRpc::XmlRpcValue servo;
-// 				servo = servos[i];	// get the data from the iterator
-// 				if(servo.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-// 					RCLCPP_DEBUG(g_node->get_logger(),"Retrieving items from 'servo_config' member %d in namespace(%s)", i,
-// nhp.getNamespace().c_str());
-
-// 					// get the servo settings
-// 					int id, center, direction, range;
-// 					id = _get_int_param (servo, "servo");
-// 					center = _get_int_param (servo, "center");
-// 					direction = _get_int_param (servo, "direction");
-// 					range = _get_int_param (servo, "range");
-
-// 					if (id && center && direction && range) {
-// 						if ((id >= 1) && (id <= MAX_SERVOS)) {
-// 							int board = ((int)(id / 16)) + 1;
-// 							_set_active_board (board);
-// 							_set_pwm_frequency (pwm);
-// 							_config_servo (id, center, range, direction);
-// 						}
-// 						else
-// 							RCLCPP_WARN(g_node->get_logger(),"Parameter servo=%d is out of bounds", id);
-// 					}
-// 					else
-// 						RCLCPP_WARN(g_node->get_logger(),"Invalid parameters for servo=%d'", id);
-// 				}
-// 				else
-// 					RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for member of 'servo_config' - expected TypeStruct(%d)",
-// servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
-// 			}
-// 		}
-// 		else
-// 			RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for 'servo_config' - expected TypeArray(%d)", servos.getType(),
-// XmlRpc::XmlRpcValue::TypeArray);
-// 	}
-// 	else
-// 		RCLCPP_DEBUG(g_node->get_logger(),"Parameter Server namespace[%s] does not contain 'servo_config",
-// nhp.getNamespace().c_str());
-
-// 	/*
-// 	  drive_config:
-// 	  	mode: mecanum
-// 		radius: 0.062
-// 		rpm: 60.0
-// 		scale: 0.3
-// 		track: 0.2
-// 		servos:
-// 			- {servo: 1, position: 1}
-// 			- {servo: 2, position: 2}
-// 			- {servo: 3, position: 3}
-// 			- {servo: 4, position: 4}
-// 	*/
-
-// 	// attempt to load configuration for drive mode
-// 	if(nhp.hasParam ("drive_config")) {
-// 		XmlRpc::XmlRpcValue drive;
-// 		nhp.getParam ("drive_config", drive);
-
-// 		if(drive.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-// 			RCLCPP_DEBUG(g_node->get_logger(),"Retrieving members from 'drive_config' in namespace(%s)",
-// nhp.getNamespace().c_str());
-
-// 			// get the drive mode settings
-// 			std::string mode;
-// 			float radius, rpm, scale, track;
-// 			int id, position;
-
-// 			mode = _get_string_param (drive, "mode");
-// 			rpm = _get_float_param (drive, "rpm");
-// 			radius = _get_float_param (drive, "radius");
-// 			track = _get_float_param (drive, "track");
-// 			scale = _get_float_param (drive, "scale");
-
-// 			_config_drive_mode (mode, rpm, radius, track, scale);
-
-// 			XmlRpc::XmlRpcValue &servos = drive["servos"];
-// 			if(servos.getType() == XmlRpc::XmlRpcValue::TypeArray) {
-// 				RCLCPP_DEBUG(g_node->get_logger(),"Retrieving members from 'drive_config/servos' in namespace(%s)",
-// nhp.getNamespace().c_str());
-
-// 				for(int32_t i = 0; i < servos.size(); i++) {
-// 					XmlRpc::XmlRpcValue servo;
-// 					servo = servos[i];	// get the data from the iterator
-// 					if(servo.getType() == XmlRpc::XmlRpcValue::TypeStruct) {
-// 						RCLCPP_DEBUG(g_node->get_logger(),"Retrieving items from 'drive_config/servos' member %d in namespace(%s)", i,
-// nhp.getNamespace().c_str());
-
-// 						// get the servo position settings
-// 						int id, position;
-// 						id = _get_int_param (servo, "servo");
-// 						position = _get_int_param (servo, "position");
-
-// 						if (id && position)
-// 							_config_servo_position (id, position); // had its own error reporting
-// 					}
-// 					else
-// 						RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for member %d of 'drive_config/servos' - expected
-// TypeStruct(%d)", i, servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
-// 				}
-// 			}
-// 			else
-// 				RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for 'drive_config/servos' - expected TypeArray(%d)",
-// servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
-// 		}
-// 		else
-// 			RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for 'drive_config' - expected TypeStruct(%d)", drive.getType(),
-// XmlRpc::XmlRpcValue::TypeStruct);
-// 	}
-// 	else
-// 		RCLCPP_DEBUG(g_node->get_logger(),"Parameter Server namespace[%s] does not contain 'drive_config",
-// nhp.getNamespace().c_str());
-// }
-
-// class MinimalPublisher : public rclcpp::Node
-// {
-// public:
-//   MinimalPublisher()
-//   : Node("minimal_publisher"), count_(0)
-//   {
-//     publisher_ = this->create_publisher<i2cpwmboard::msg::Num>("topic", 10);    // CHANGE
-//     timer_ = this->create_wall_timer(
-//       500ms, std::bind(&MinimalPublisher::timer_callback, this));
-//   }
-
-// private:
-//   void timer_callback()
-//   {
-//     auto message = i2cpwmboard::msg::Num();                               // CHANGE
-//     message.num = this->count_++;                                        // CHANGE
-//     RCLCPP_INFO(this->get_logger(), "Publishing: '%d'", message.num);    // CHANGE
-//     publisher_->publish(message);
-//   }
-//   rclcpp::TimerBase::SharedPtr timer_;
-//   rclcpp::Publisher<i2cpwmboard::msg::Num>::SharedPtr publisher_;         // CHANGE
-//   size_t count_;
-// };
 using namespace std::placeholders;
 class I2CPwmBoard : public rclcpp::Node
 {
 public:
   I2CPwmBoard() : Node("i2cpwm_board")
   {
+    freq_srv = this->create_service<i2cpwmboard::srv::IntValue>("set_pwm_frequency", &set_pwm_frequency);
+
+    config_srv = this->create_service<i2cpwmboard::srv::ServosConfig>("config_servos", &config_servos);
+
+    mode_srv = this->create_service<i2cpwmboard::srv::DriveMode>("config_drive_mode", &config_drive_mode);
+
+    stop_srv = this->create_service<i2cpwmboard::srv::StopServos>("stop_servos", &stop_servos);
+
     subscription_ = this->create_subscription<std_msgs::msg::String>("topic", 10,
                                                                      std::bind(&I2CPwmBoard::topic_callback, this, _1));
 
-    abs_sub = this->create_subscription<i2cpwmboard::msg::ServoArray>("servos_absolute", 500, 
-                                                                     std::bind(&I2CPwmBoard::servos_absolute, this, _1));
-    rel_sub = this->create_subscription<i2cpwmboard::msg::ServoArray>("servos_proportional", 500, 
-                                                                     std::bind(&I2CPwmBoard::servos_proportional, this, _1));    
-    drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500, 
-                                                                     std::bind(&I2CPwmBoard::servos_drive, this, _1));                                                                                                                         
+    abs_sub = this->create_subscription<i2cpwmboard::msg::ServoArray>(
+        "servos_absolute", 500, std::bind(&I2CPwmBoard::servos_absolute, this, _1));
+    rel_sub = this->create_subscription<i2cpwmboard::msg::ServoArray>(
+        "servos_proportional", 500, std::bind(&I2CPwmBoard::servos_proportional, this, _1));
+    drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500,
+                                                                     std::bind(&I2CPwmBoard::servos_drive, this, _1));
   }
 
 private:
@@ -1080,199 +918,204 @@ private:
     }
   }
 
-
-    void servos_proportional(const i2cpwmboard::msg::ServoArray::SharedPtr msg)
-    {
+  void servos_proportional(const i2cpwmboard::msg::ServoArray::SharedPtr msg)
+  {
     /* this subscription works on the active_board */
 
     for (std::vector<i2cpwmboard::msg::Servo>::const_iterator sp = msg->servos.begin(); sp != msg->servos.end(); ++sp)
     {
-        int servo = sp->servo;
-        float value = sp->value;
-        _set_pwm_interval_proportional(servo, value);
+      int servo = sp->servo;
+      float value = sp->value;
+      _set_pwm_interval_proportional(servo, value);
     }
+  }
+
+  void servos_drive(const geometry_msgs::msg::Twist::SharedPtr msg)
+  {
+    /* this subscription works on the active_board */
+
+    int i;
+    float delta, range, ratio;
+    float temp_x, temp_y, temp_r;
+    float dir_x, dir_y, dir_r;
+    float speed[4];
+
+    /* msg is a pointer to a Twist message: msg->linear and msg->angular each of which have members .x .y .z */
+    /* the subscriber uses the maths from: http://robotsforroboticists.com/drive-kinematics/ */
+
+    RCLCPP_DEBUG(g_node->get_logger(), "servos_drive Twist = [%5.2f %5.2f %5.2f] [%5.2f %5.2f %5.2f]", msg->linear.x,
+                 msg->linear.y, msg->linear.z, msg->angular.x, msg->angular.y, msg->angular.z);
+
+    if (_active_drive.mode == MODE_UNDEFINED)
+    {
+      RCLCPP_ERROR(g_node->get_logger(), "drive mode not set");
+      return;
+    }
+    if ((_active_drive.mode < MODE_UNDEFINED) || (_active_drive.mode >= MODE_INVALID))
+    {
+      RCLCPP_ERROR(g_node->get_logger(), "unrecognized drive mode set %d", _active_drive.mode);
+      return;
     }
 
+    dir_x = ((msg->linear.x < 0) ? -1 : 1);
+    dir_y = ((msg->linear.y < 0) ? -1 : 1);
+    dir_r = ((msg->angular.z < 0) ? -1 : 1);
 
-void servos_drive(const geometry_msgs::msg::Twist::SharedPtr msg)
-{
-  /* this subscription works on the active_board */
+    temp_x = _active_drive.scale * _abs(msg->linear.x);
+    temp_y = _active_drive.scale * _abs(msg->linear.y);
+    temp_r = _abs(msg->angular.z);  // radians
 
-  int i;
-  float delta, range, ratio;
-  float temp_x, temp_y, temp_r;
-  float dir_x, dir_y, dir_r;
-  float speed[4];
+    // temp_x = _smoothing (temp_x);
+    // temp_y = _smoothing (temp_y);
+    // temp_r = _smoothing (temp_r) / 2;
 
-  /* msg is a pointer to a Twist message: msg->linear and msg->angular each of which have members .x .y .z */
-  /* the subscriber uses the maths from: http://robotsforroboticists.com/drive-kinematics/ */
+    // the differential rate is the robot rotational circumference / angular velocity
+    // since the differential rate is applied to both sides in opposite amounts it is halved
+    delta = (_active_drive.track / 2) * temp_r;
+    // delta is now in meters/sec
 
-  RCLCPP_DEBUG(g_node->get_logger(), "servos_drive Twist = [%5.2f %5.2f %5.2f] [%5.2f %5.2f %5.2f]", msg->linear.x,
-               msg->linear.y, msg->linear.z, msg->angular.x, msg->angular.y, msg->angular.z);
+    // determine if we will over-speed the motor and scal accordingly
+    ratio = _convert_mps_to_proportional(temp_x + delta);
+    if (ratio > 1.0)
+      temp_x /= ratio;
 
-  if (_active_drive.mode == MODE_UNDEFINED)
-  {
-    RCLCPP_ERROR(g_node->get_logger(), "drive mode not set");
-    return;
-  }
-  if ((_active_drive.mode < MODE_UNDEFINED) || (_active_drive.mode >= MODE_INVALID))
-  {
-    RCLCPP_ERROR(g_node->get_logger(), "unrecognized drive mode set %d", _active_drive.mode);
-    return;
-  }
-
-  dir_x = ((msg->linear.x < 0) ? -1 : 1);
-  dir_y = ((msg->linear.y < 0) ? -1 : 1);
-  dir_r = ((msg->angular.z < 0) ? -1 : 1);
-
-  temp_x = _active_drive.scale * _abs(msg->linear.x);
-  temp_y = _active_drive.scale * _abs(msg->linear.y);
-  temp_r = _abs(msg->angular.z);  // radians
-
-  // temp_x = _smoothing (temp_x);
-  // temp_y = _smoothing (temp_y);
-  // temp_r = _smoothing (temp_r) / 2;
-
-  // the differential rate is the robot rotational circumference / angular velocity
-  // since the differential rate is applied to both sides in opposite amounts it is halved
-  delta = (_active_drive.track / 2) * temp_r;
-  // delta is now in meters/sec
-
-  // determine if we will over-speed the motor and scal accordingly
-  ratio = _convert_mps_to_proportional(temp_x + delta);
-  if (ratio > 1.0)
-    temp_x /= ratio;
-
-  switch (_active_drive.mode)
-  {
-    case MODE_ACKERMAN:
-      /*
-        with ackerman drive, steering is handled by a separate servo
-        we drive assigned servos exclusively by the linear.x
-      */
-      speed[0] = temp_x * dir_x;
-      speed[0] = _convert_mps_to_proportional(speed[0]);
-      if (_abs(speed[0]) > 1.0)
-        speed[0] = 1.0 * dir_x;
-
-      RCLCPP_DEBUG(g_node->get_logger(), "ackerman drive mode speed=%6.4f", speed[0]);
-      break;
-
-    case MODE_DIFFERENTIAL:
-      /*
-        with differential drive, steering is handled by the relative speed of left and right servos
-        we drive assigned servos by mixing linear.x and angular.z
-        we compute the delta for left and right components
-        we use the sign of the angular velocity to determine which is the faster / slower
-      */
-
-      /* the delta is the angular velocity * half the drive track */
-
-      if (dir_r > 0)
-      {  // turning right
-        speed[0] = (temp_x + delta) * dir_x;
-        speed[1] = (temp_x - delta) * dir_x;
-      }
-      else
-      {  // turning left
-        speed[0] = (temp_x - delta) * dir_x;
-        speed[1] = (temp_x + delta) * dir_x;
-      }
-
-      RCLCPP_DEBUG(g_node->get_logger(), "computed differential drive mode speed left=%6.4f right=%6.4f", speed[0],
-                   speed[1]);
-
-      /* if any of the results are greater that 1.0, we need to scale all the results down */
-      range = _max(_abs(speed[0]), _abs(speed[1]));
-
-      ratio = _convert_mps_to_proportional(range);
-      if (ratio > 1.0)
-      {
-        speed[0] /= ratio;
-        speed[1] /= ratio;
-      }
-      RCLCPP_DEBUG(g_node->get_logger(), "adjusted differential drive mode speed left=%6.4f right=%6.4f", speed[0],
-                   speed[1]);
-
-      speed[0] = _convert_mps_to_proportional(speed[0]);
-      speed[1] = _convert_mps_to_proportional(speed[1]);
-
-      RCLCPP_DEBUG(g_node->get_logger(), "differential drive mode speed left=%6.4f right=%6.4f", speed[0], speed[1]);
-      break;
-
-    case MODE_MECANUM:
-      /*
-        with mecanum drive, steering is handled by the relative speed of left and right servos
-        with mecanum drive, lateral motion is handled by the rotation of front and rear servos
-        we drive assigned servos by mixing linear.x and angular.z  and linear.y
-      */
-
-      if (dir_r > 0)
-      {  // turning right
-        speed[0] = speed[2] = (temp_x + delta) * dir_x;
-        speed[1] = speed[3] = (temp_x - delta) * dir_x;
-      }
-      else
-      {  // turning left
-        speed[0] = speed[2] = (temp_x - delta) * dir_x;
-        speed[1] = speed[3] = (temp_x + delta) * dir_x;
-      }
-
-      speed[0] += temp_y * dir_y;
-      speed[3] += temp_y * dir_y;
-      speed[1] -= temp_y * dir_y;
-      speed[2] -= temp_y * dir_y;
-      RCLCPP_DEBUG(g_node->get_logger(),
-                   "computed mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f rightreer=%6.4f",
-                   speed[0], speed[1], speed[2], speed[3]);
-
-      range = _max(_max(_max(_abs(speed[0]), _abs(speed[1])), _abs(speed[2])), _abs(speed[3]));
-      ratio = _convert_mps_to_proportional(range);
-      if (ratio > 1.0)
-      {
-        speed[0] /= ratio;
-        speed[1] /= ratio;
-        speed[2] /= ratio;
-        speed[3] /= ratio;
-      }
-      RCLCPP_DEBUG(g_node->get_logger(),
-                   "adjusted mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f rightreer=%6.4f",
-                   speed[0], speed[1], speed[2], speed[3]);
-
-      speed[0] = _convert_mps_to_proportional(speed[0]);
-      speed[1] = _convert_mps_to_proportional(speed[1]);
-      speed[2] = _convert_mps_to_proportional(speed[2]);
-      speed[3] = _convert_mps_to_proportional(speed[3]);
-
-      RCLCPP_DEBUG(g_node->get_logger(),
-                   "mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f rightreer=%6.4f", speed[0],
-                   speed[1], speed[2], speed[3]);
-      break;
-
-    default:
-      break;
-  }
-
-  /* find all drive servos and set their new speed */
-  for (i = 0; i < (_last_servo); i++)
-  {
-    // we use 'fall thru' on the switch statement to allow all necessary servos to be controlled
     switch (_active_drive.mode)
     {
-      case MODE_MECANUM:
-        if (_servo_configs[i].mode_pos == POSITION_RIGHTREAR)
-          _set_pwm_interval_proportional(i + 1, speed[3]);
-        if (_servo_configs[i].mode_pos == POSITION_LEFTREAR)
-          _set_pwm_interval_proportional(i + 1, speed[2]);
-      case MODE_DIFFERENTIAL:
-        if (_servo_configs[i].mode_pos == POSITION_RIGHTFRONT)
-          _set_pwm_interval_proportional(i + 1, speed[1]);
       case MODE_ACKERMAN:
-        if (_servo_configs[i].mode_pos == POSITION_LEFTFRONT)
-          _set_pwm_interval_proportional(i + 1, speed[0]);
+        /*
+          with ackerman drive, steering is handled by a separate servo
+          we drive assigned servos exclusively by the linear.x
+        */
+        speed[0] = temp_x * dir_x;
+        speed[0] = _convert_mps_to_proportional(speed[0]);
+        if (_abs(speed[0]) > 1.0)
+          speed[0] = 1.0 * dir_x;
+
+        RCLCPP_DEBUG(g_node->get_logger(), "ackerman drive mode speed=%6.4f", speed[0]);
+        break;
+
+      case MODE_DIFFERENTIAL:
+        /*
+          with differential drive, steering is handled by the relative speed of left and right servos
+          we drive assigned servos by mixing linear.x and angular.z
+          we compute the delta for left and right components
+          we use the sign of the angular velocity to determine which is the faster / slower
+        */
+
+        /* the delta is the angular velocity * half the drive track */
+
+        if (dir_r > 0)
+        {  // turning right
+          speed[0] = (temp_x + delta) * dir_x;
+          speed[1] = (temp_x - delta) * dir_x;
+        }
+        else
+        {  // turning left
+          speed[0] = (temp_x - delta) * dir_x;
+          speed[1] = (temp_x + delta) * dir_x;
+        }
+
+        RCLCPP_DEBUG(g_node->get_logger(), "computed differential drive mode speed left=%6.4f right=%6.4f", speed[0],
+                     speed[1]);
+
+        /* if any of the results are greater that 1.0, we need to scale all the results down */
+        range = _max(_abs(speed[0]), _abs(speed[1]));
+
+        ratio = _convert_mps_to_proportional(range);
+        if (ratio > 1.0)
+        {
+          speed[0] /= ratio;
+          speed[1] /= ratio;
+        }
+        RCLCPP_DEBUG(g_node->get_logger(), "adjusted differential drive mode speed left=%6.4f right=%6.4f", speed[0],
+                     speed[1]);
+
+        speed[0] = _convert_mps_to_proportional(speed[0]);
+        speed[1] = _convert_mps_to_proportional(speed[1]);
+
+        RCLCPP_DEBUG(g_node->get_logger(), "differential drive mode speed left=%6.4f right=%6.4f", speed[0], speed[1]);
+        break;
+
+      case MODE_MECANUM:
+        /*
+          with mecanum drive, steering is handled by the relative speed of left and right servos
+          with mecanum drive, lateral motion is handled by the rotation of front and rear servos
+          we drive assigned servos by mixing linear.x and angular.z  and linear.y
+        */
+
+        if (dir_r > 0)
+        {  // turning right
+          speed[0] = speed[2] = (temp_x + delta) * dir_x;
+          speed[1] = speed[3] = (temp_x - delta) * dir_x;
+        }
+        else
+        {  // turning left
+          speed[0] = speed[2] = (temp_x - delta) * dir_x;
+          speed[1] = speed[3] = (temp_x + delta) * dir_x;
+        }
+
+        speed[0] += temp_y * dir_y;
+        speed[3] += temp_y * dir_y;
+        speed[1] -= temp_y * dir_y;
+        speed[2] -= temp_y * dir_y;
+        RCLCPP_DEBUG(g_node->get_logger(),
+                     "computed mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f "
+                     "rightreer=%6.4f",
+                     speed[0], speed[1], speed[2], speed[3]);
+
+        range = _max(_max(_max(_abs(speed[0]), _abs(speed[1])), _abs(speed[2])), _abs(speed[3]));
+        ratio = _convert_mps_to_proportional(range);
+        if (ratio > 1.0)
+        {
+          speed[0] /= ratio;
+          speed[1] /= ratio;
+          speed[2] /= ratio;
+          speed[3] /= ratio;
+        }
+        RCLCPP_DEBUG(g_node->get_logger(),
+                     "adjusted mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f "
+                     "rightreer=%6.4f",
+                     speed[0], speed[1], speed[2], speed[3]);
+
+        speed[0] = _convert_mps_to_proportional(speed[0]);
+        speed[1] = _convert_mps_to_proportional(speed[1]);
+        speed[2] = _convert_mps_to_proportional(speed[2]);
+        speed[3] = _convert_mps_to_proportional(speed[3]);
+
+        RCLCPP_DEBUG(g_node->get_logger(),
+                     "mecanum drive mode speed leftfront=%6.4f rightfront=%6.4f leftrear=%6.4f rightreer=%6.4f",
+                     speed[0], speed[1], speed[2], speed[3]);
+        break;
+
+      default:
+        break;
+    }
+
+    /* find all drive servos and set their new speed */
+    for (i = 0; i < (_last_servo); i++)
+    {
+      // we use 'fall thru' on the switch statement to allow all necessary servos to be controlled
+      switch (_active_drive.mode)
+      {
+        case MODE_MECANUM:
+          if (_servo_configs[i].mode_pos == POSITION_RIGHTREAR)
+            _set_pwm_interval_proportional(i + 1, speed[3]);
+          if (_servo_configs[i].mode_pos == POSITION_LEFTREAR)
+            _set_pwm_interval_proportional(i + 1, speed[2]);
+        case MODE_DIFFERENTIAL:
+          if (_servo_configs[i].mode_pos == POSITION_RIGHTFRONT)
+            _set_pwm_interval_proportional(i + 1, speed[1]);
+        case MODE_ACKERMAN:
+          if (_servo_configs[i].mode_pos == POSITION_LEFTFRONT)
+            _set_pwm_interval_proportional(i + 1, speed[0]);
+      }
     }
   }
-}
+
+  rclcpp::Service<i2cpwmboard::srv::DriveMode>::SharedPtr mode_srv;
+  rclcpp::Service<i2cpwmboard::srv::ServosConfig>::SharedPtr config_srv;
+  rclcpp::Service<i2cpwmboard::srv::IntValue>::SharedPtr freq_srv;
+  rclcpp::Service<std_srvs::srv::Empty>::SharedPtr stop_srv;
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_;
   rclcpp::Subscription<i2cpwmboard::msg::ServoArray>::SharedPtr abs_sub;
@@ -1288,19 +1131,6 @@ int main(int argc, char* argv[])
   rclcpp::init(argc, argv);
 
   g_node = std::make_shared<I2CPwmBoard>();
-
-  // rclcpp::Service<i2cpwmboard::srv::IntValue>::SharedPtr freq_srv =
-  // g_node->create_service<i2cpwmboard::srv::IntValue>("set_pwm_frequency", &set_pwm_frequency);
-
-  rclcpp::Service<i2cpwmboard::srv::ServosConfig>::SharedPtr config_srv =
-      g_node->create_service<i2cpwmboard::srv::ServosConfig>("config_servos", &config_servos);
-
-  rclcpp::Service<i2cpwmboard::srv::DriveMode>::SharedPtr mode_srv =
-      g_node->create_service<i2cpwmboard::srv::DriveMode>("config_drive_mode", &config_drive_mode);
-
-  // rclcpp::Service<i2cpwmboard::srv::StopServos>::SharedPtr stop_srv =
-  // g_node->create_service<i2cpwmboard::srv::StopServos>("stop_servos", &
-  // stop_servos);
 
   rclcpp::spin(g_node);
   rclcpp::shutdown();

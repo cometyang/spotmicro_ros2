@@ -865,9 +865,6 @@ static double _get_float_param(XmlRpc::XmlRpcValue obj, std::string param_name)
   return 0;
 }
 
-
-
-
 using namespace std::placeholders;
 class I2CPwmBoard : public rclcpp::Node
 {
@@ -880,7 +877,7 @@ public:
 
     mode_srv = this->create_service<i2cpwmboard::srv::DriveMode>("config_drive_mode", &config_drive_mode);
 
-    stop_srv = this->create_service<i2cpwmboard::srv::StopServos>("stop_servos", &stop_servos);
+    stop_srv = this->create_service<std_srvs::srv::Empty>("stop_servos", &stop_servos);
 
     subscription_ = this->create_subscription<std_msgs::msg::String>("topic", 10,
                                                                      std::bind(&I2CPwmBoard::topic_callback, this, _1));
@@ -891,6 +888,157 @@ public:
         "servos_proportional", 500, std::bind(&I2CPwmBoard::servos_proportional, this, _1));
     drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500,
                                                                      std::bind(&I2CPwmBoard::servos_drive, this, _1));
+  }
+
+  int _load_params(void)
+  {
+    // default I2C device on RPi2 and RPi3 = "/dev/i2c-1" Orange Pi Lite = "/dev/i2c-0"
+    get_parameter_or("i2c_device_number", _controller_io_device, 1);
+    std::stringstream device;
+    device << "/dev/i2c-" << _controller_io_device;
+    _init (device.str().c_str());
+
+    _set_active_board (1);
+
+    int pwm;
+    get_parameter_or("pwm_frequency", pwm, 50);
+    _set_pwm_frequency (pwm);
+
+	/*
+	  // note: servos are numbered sequntially with '1' being the first servo on board #1, '17' is the first servo on board #2 	  
+      servo_config:
+	  	- {servo: 1, center: 333, direction: -1, range: 100}
+		- {servo: 2, center: 336, direction: 1, range: 108}
+	*/
+	// attempt to load configuration for servos
+    rclcpp::Parameter parameter; 
+	if(get_parameter("servo_config", parameter)) {
+      XmlRpc::XmlRpcValue servos;
+      get_parameter("servo_config", servos);
+
+      if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
+      {
+        RCLCPP_DEBUG(get_logger(), "Retrieving members from 'servo_config' in namespace(%s)",
+                     get_namespace());
+
+        for (int32_t i = 0; i < servos.size(); i++)
+        {
+          XmlRpc::XmlRpcValue servo;
+          servo = servos[i];  // get the data from the iterator
+          if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+          {
+            RCLCPP_DEBUG(get_logger(), "Retrieving items from 'servo_config' member %d in namespace(%s)", i,
+                         get_namespace());
+
+            // get the servo settings
+            int id, center, direction, range;
+            id = _get_int_param(servo, "servo");
+            center = _get_int_param(servo, "center");
+            direction = _get_int_param(servo, "direction");
+            range = _get_int_param(servo, "range");
+
+            if (id && center && direction && range)
+            {
+              if ((id >= 1) && (id <= MAX_SERVOS))
+              {
+                int board = ((int)(id / 16)) + 1;
+                _set_active_board(board);
+                _set_pwm_frequency(pwm);
+                _config_servo(id, center, range, direction);
+              }
+              else
+                RCLCPP_WARN(get_logger(), "Parameter servo=%d is out of bounds", id);
+            }
+            else
+              RCLCPP_WARN(get_logger(), "Invalid parameters for servo=%d'", id);
+          }
+          else
+             RCLCPP_WARN(get_logger(),"Invalid type %d for member of 'servo_config' - expected TypeStruct(%d)", servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+        }
+      }
+      else
+        RCLCPP_WARN(get_logger(), "Invalid type %d for 'servo_config' - expected TypeArray(%d)",
+                    servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
+	}
+	else
+		RCLCPP_DEBUG(get_logger(),"Parameter Server namespace[%s] does not contain 'servo_config",get_namespace());
+
+	/*
+	  drive_config:
+	  	mode: mecanum
+		radius: 0.062
+		rpm: 60.0
+		scale: 0.3
+		track: 0.2
+		servos:
+			- {servo: 1, position: 1}
+			- {servo: 2, position: 2}
+			- {servo: 3, position: 3}
+			- {servo: 4, position: 4}
+	*/
+
+	// attempt to load configuration for drive mode
+	if(get_parameter("drive_config", parameter)) {
+      XmlRpc::XmlRpcValue drive;
+      get_parameter("drive_config", drive);
+
+      if (drive.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+      {
+        RCLCPP_DEBUG(get_logger(), "Retrieving members from 'drive_config' in namespace(%s)",
+                     get_namespace());
+
+        // get the drive mode settings
+        std::string mode;
+        float radius, rpm, scale, track;
+        int id, position;
+
+        mode = _get_string_param(drive, "mode");
+        rpm = _get_float_param(drive, "rpm");
+        radius = _get_float_param(drive, "radius");
+        track = _get_float_param(drive, "track");
+        scale = _get_float_param(drive, "scale");
+
+        _config_drive_mode(mode, rpm, radius, track, scale);
+
+        XmlRpc::XmlRpcValue& servos = drive["servos"];
+        if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
+        {
+          RCLCPP_DEBUG(get_logger(), "Retrieving members from 'drive_config/servos' in namespace(%s)",
+                       get_namespace());
+
+          for (int32_t i = 0; i < servos.size(); i++)
+          {
+            XmlRpc::XmlRpcValue servo;
+            servo = servos[i];  // get the data from the iterator
+            if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+            {
+              RCLCPP_DEBUG(get_logger(),
+                           "Retrieving items from 'drive_config/servos' member %d in namespace(%s)", i,
+                           get_namespace());
+
+              // get the servo position settings
+              int id, position;
+              id = _get_int_param(servo, "servo");
+              position = _get_int_param(servo, "position");
+
+              if (id && position)
+                _config_servo_position(id, position);  // had its own error reporting
+            }
+            else
+                RCLCPP_WARN(get_logger(),"Invalid type %d for member %d of 'drive_config/servos' - expected TypeStruct(%d)", i, servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+          }
+        }
+        else
+          RCLCPP_WARN(get_logger(), "Invalid type %d for 'drive_config/servos' - expected TypeArray(%d)",
+                      servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
+      }
+      else
+        RCLCPP_WARN(get_logger(), "Invalid type %d for 'drive_config' - expected TypeStruct(%d)",
+                    drive.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+	}
+	else
+		RCLCPP_DEBUG(get_logger(),"Parameter Server namespace[%s] does not contain 'drive_config",
+    get_namespace());
   }
 
 private:

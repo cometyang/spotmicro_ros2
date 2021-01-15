@@ -1,9 +1,0 @@
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/install/strip.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/install.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/list_install_components.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/rebuild_cache.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/edit_cache.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/test.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/install/local.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/spotmicro_uninstall.dir
-/home/ubuntu/dev_ws/src/spotmicro/build/CMakeFiles/uninstall.dir

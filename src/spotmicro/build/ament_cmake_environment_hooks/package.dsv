@@ -1,4 +1,0 @@
-source;share/spotmicro/local_setup.bash
-source;share/spotmicro/local_setup.dsv
-source;share/spotmicro/local_setup.sh
-source;share/spotmicro/local_setup.zsh

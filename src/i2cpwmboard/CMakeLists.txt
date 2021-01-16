@@ -61,19 +61,20 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 
 
- add_executable(talker src/publisher_member_function.cpp)
- ament_target_dependencies(talker rclcpp i2cpwmboard)         # CHANGE
+add_executable(talker src/publisher_member_function.cpp)
+ament_target_dependencies(talker rclcpp i2cpwmboard)         # CHANGE
  
- add_executable(listener src/subscriber_member_function.cpp)
- ament_target_dependencies(listener rclcpp i2cpwmboard)     # CHANGE
+add_executable(listener src/subscriber_member_function.cpp)
+ament_target_dependencies(listener rclcpp i2cpwmboard)     # CHANGE
  
- add_executable(i2cpwm_board src/i2cpwm_controller.cpp)
- target_link_libraries(i2cpwm_board i2c xmlrpcpp)
- ament_target_dependencies(i2cpwm_board rclcpp std_srvs geometry_msgs i2cpwmboard)     # CHANGE
+add_executable(i2cpwm_board src/i2cpwm_controller.cpp)
+target_link_libraries(i2cpwm_board i2c xmlrpcpp)
+ament_target_dependencies(i2cpwm_board rclcpp std_srvs geometry_msgs i2cpwmboard)     # CHANGE
 
- install(TARGETS
+install(TARGETS
    talker
    listener
+   i2cpwm_board
    DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

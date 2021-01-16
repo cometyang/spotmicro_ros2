@@ -18,7 +18,7 @@ extern "C"
 #include <i2c/smbus.h>
 #include <linux/i2c-dev.h>
 }
-#include "i2cpwmboard/msg/num.hpp"  // CHANGE
+//#include "i2cpwmboard/msg/num.hpp"  // CHANGE
 #include "rclcpp/rclcpp.hpp"
 
 // messages used for the absolute and proportional movement topics

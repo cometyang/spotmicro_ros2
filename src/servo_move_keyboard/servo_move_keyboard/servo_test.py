@@ -140,11 +140,12 @@ class SpotMicroServoControl(Node):
         # Setup terminal input reading, taken from teleop_twist_keyboard
         self.settings = termios.tcgetattr(sys.stdin)
 
+    
 
     def send_servo_msg(self):
-        for servo_key, servo_obj in self.servos.iteritems():
+        for servo_key, servo_obj in self.servos.items():
             self._servo_msg.servos[servo_obj.id].servo = servo_obj.id+1
-            self._servo_msg.servos[servo_obj.id].value = servo_obj.value
+            self._servo_msg.servos[servo_obj.id].value = float(servo_obj.value)  #message type is float
             #rospy.loginfo("Sending to %s command %d"%(servo_key, servo_obj.value))
 
         self.ros_pub_servo_array.publish(self._servo_msg)
@@ -182,7 +183,7 @@ class SpotMicroServoControl(Node):
         try:
             while rclpy.ok(): # replace ros1 rospy.is_shutdown()
                 print(msg)
-                userInput = raw_input("Command?: ")
+                userInput = input("Command?: ")
 
                 if userInput not in validCmds:
                     print('Valid command not entered, try again...')
@@ -275,7 +276,7 @@ def main(args=None):
     thread.start()
 
     #rclpy.spin(servo_ctrl_node)
-
+    servo_ctrl_node.run()
     servo_ctrl_node.destroy_node()
 
     rclpy.shutdown()

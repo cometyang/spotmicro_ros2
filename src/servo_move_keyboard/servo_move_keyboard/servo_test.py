@@ -1,8 +1,8 @@
 import rclpy
 from rclpy.node import Node
-
+import sys, select, termios, tty # For terminal keyboard key press reading
 from i2cpwmboard.msg import Servo, ServoArray
-
+import threading
 # Global variable for num of servos
 numServos = 12
 
@@ -110,176 +110,176 @@ class ServoConvert():
             self._min = min_val
             print('Servo %2i min set to %4i'%(self.id+1,min_val))
 
-# class SpotMicroServoControl():
-#     def __init__(self):
-#         rospy.loginfo("Setting Up the Spot Micro Servo Control Node...")
-
-#         # Set up and title the ros node for this code
-#         rospy.init_node('spot_micro_servo_control')
-
-#         # Intialize empty servo dictionary
-#         self.servos = {}
-
-#         # Create a servo dictionary with 12 ServoConvert objects
-#         # keys: integers 0 through 12
-#         # values: ServoConvert objects
-#         for i in range(numServos):
-#             self.servos[i] = ServoConvert(id=i)
-#         rospy.loginfo("> Servos corrrectly initialized")
-
-#         # Create empty ServoArray message with n number of Servos in its array
-#         self._servo_msg       = ServoArray()
-#         for i in range(numServos): 
-#             self._servo_msg.servos.append(Servo())
-
-#         # Create the servo array publisher
-#         self.ros_pub_servo_array    = rospy.Publisher("/servos_absolute", ServoArray, queue_size=1)
-#         rospy.loginfo("> Publisher corrrectly initialized")
-
-#         rospy.loginfo("Initialization complete")
-
-#         # Setup terminal input reading, taken from teleop_twist_keyboard
-#         self.settings = termios.tcgetattr(sys.stdin)
-
-#     def send_servo_msg(self):
-#         for servo_key, servo_obj in self.servos.iteritems():
-#             self._servo_msg.servos[servo_obj.id].servo = servo_obj.id+1
-#             self._servo_msg.servos[servo_obj.id].value = servo_obj.value
-#             #rospy.loginfo("Sending to %s command %d"%(servo_key, servo_obj.value))
-
-#         self.ros_pub_servo_array.publish(self._servo_msg)
-
-#     def reset_all_servos_center(self):
-#         '''
-#         Reset all servos to their center value
-#         '''
-#         for s in self.servos:
-#             self.servos[s].value = self.servos[s]._center
-    
-#     def reset_all_servos_off(self):
-#         '''Set all servos to off/freewheel value (pwm of 0)'''
-#         for s in self.servos:
-#             self.servos[s].value = 0
-    
-#     def getKey(self):
-#         tty.setraw(sys.stdin.fileno())
-#         select.select([sys.stdin], [], [], 0)
-#         key = sys.stdin.read(1)
-#         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
-#         return key
-
-#     def run(self):
-
-#         # Set all servos to their center values
-#         self.reset_all_servos_center()
-#         self.send_servo_msg()
-
-#         # Prompt user with keyboard command information
-#         # Ability to control individual servo to find limits and center values
-#         # and ability to control all servos together
-        
-#         while not rospy.is_shutdown():
-#             print(msg)
-#             userInput = raw_input("Command?: ")
-
-#             if userInput not in validCmds:
-#                 print('Valid command not entered, try again...')
-#             else:
-#                 if userInput == 'quit':
-#                     print("Ending program...")
-#                     print('Final Servo Values')
-#                     print('--------------------')
-#                     for i in range(numServos):
-#                         print('Servo %2i:   Min: %4i,   Center: %4i,   Max: %4i'%(i,self.servos[i]._min,self.servos[i]._center,self.servos[i]._max))                    
-#                     break
-
-#                 elif userInput == 'oneServo':
-#                     # Reset all servos to center value, and send command
-#                     self.reset_all_servos_off()
-#                     self.send_servo_msg()
-
-#                     # First get servo number to command
-#                     nSrv = -1
-#                     while (1):
-#                         userInput = input('Which servo to control? Enter a number 1 through 12: ')
-                        
-#                         if userInput not in range(1,numServos+1):
-#                             print("Invalid servo number entered, try again")
-#                         else:
-#                             nSrv = userInput - 1
-#                             break
-
-#                     # Loop and act on user command
-#                     print('Enter command, q to go back to option select: ')
-#                     while (1):
-                       
-#                         userInput = self.getKey()
-
-#                         if userInput == 'q':
-#                             break
-#                         elif userInput not in keyDict:
-#                             print('Key not in valid key commands, try again')
-#                         else:
-#                             keyDict[userInput](self.servos[nSrv])
-#                             print('Servo %2i cmd: %4i'%(nSrv,self.servos[nSrv].value))
-#                             self.send_servo_msg()
-
-#                 elif userInput == 'allServos':
-#                     # Reset all servos to center value, and send command
-#                     self.reset_all_servos_center()
-#                     self.send_servo_msg()
-
-#                     print('Enter command, q to go back to option select: ')                   
-#                     while (1):
-
-#                         userInput = self.getKey()
-
-#                         if userInput == 'q':
-#                             break
-#                         elif userInput not in keyDict:
-#                             print('Key not in valid key commands, try again')
-#                         elif userInput in ('b','n','m'):
-#                             print('Saving values not supported in all servo control mode')
-#                         else:
-#                             for s in self.servos.values():
-#                                 keyDict[userInput](s)
-#                             print('All Servos Commanded')
-#                             self.send_servo_msg()
-                                
-
-
-
-
-
-
-#             # print self._last_time_cmd_rcv, self.is_controller_connected
-#             # if not self.is_controller_connected:
-#             #     self.set_actuators_idle()
-           
-#             # Set the control rate in Hz
-#             rate = rospy.Rate(10)
-#             rate.sleep()
-
 
 class SpotMicroServoControl(Node):
 
     def __init__(self):
         super().__init__('spot_micro_servo_control')
         self.get_logger().info("Setting Up the Spot Micro Servo Control Node...")
+        # Intialize empty servo dictionary
+        self.servos = {}
 
+        # Create a servo dictionary with 12 ServoConvert objects
+        # keys: integers 0 through 12
+        # values: ServoConvert objects
+        for i in range(numServos):
+            self.servos[i] = ServoConvert(id=i)
+        self.get_logger().info("> Servos corrrectly initialized")
+
+        # Create empty ServoArray message with n number of Servos in its array
+        self._servo_msg       = ServoArray()
+        for i in range(numServos): 
+            self._servo_msg.servos.append(Servo())
+
+        # Create the servo array publisher
+        self.ros_pub_servo_array = self.create_publisher(ServoArray, 'servos_absolute', 10) # queue_size=10
+        self.get_logger().info("> Publisher corrrectly initialized")
+
+        self.get_logger().info("Initialization complete")
+
+        # Setup terminal input reading, taken from teleop_twist_keyboard
+        self.settings = termios.tcgetattr(sys.stdin)
+
+
+    def send_servo_msg(self):
+        for servo_key, servo_obj in self.servos.iteritems():
+            self._servo_msg.servos[servo_obj.id].servo = servo_obj.id+1
+            self._servo_msg.servos[servo_obj.id].value = servo_obj.value
+            #rospy.loginfo("Sending to %s command %d"%(servo_key, servo_obj.value))
+
+        self.ros_pub_servo_array.publish(self._servo_msg)
+
+    def reset_all_servos_center(self):
+        '''
+        Reset all servos to their center value
+        '''
+        for s in self.servos:
+            self.servos[s].value = self.servos[s]._center
     
+    def reset_all_servos_off(self):
+        '''Set all servos to off/freewheel value (pwm of 0)'''
+        for s in self.servos:
+            self.servos[s].value = 0
+    
+    def getKey(self):
+        tty.setraw(sys.stdin.fileno())
+        select.select([sys.stdin], [], [], 0)
+        key = sys.stdin.read(1)
+        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
+        return key
 
+
+    def run(self):
+
+        # Set all servos to their center values
+        self.reset_all_servos_center()
+        self.send_servo_msg()
+
+        # Prompt user with keyboard command information
+        # Ability to control individual servo to find limits and center values
+        # and ability to control all servos together
+        rate = self.create_rate(10)
+        try:
+            while rclpy.ok(): # replace ros1 rospy.is_shutdown()
+                print(msg)
+                userInput = raw_input("Command?: ")
+
+                if userInput not in validCmds:
+                    print('Valid command not entered, try again...')
+                else:
+                    if userInput == 'quit':
+                        print("Ending program...")
+                        print('Final Servo Values')
+                        print('--------------------')
+                        for i in range(numServos):
+                            print('Servo %2i:   Min: %4i,   Center: %4i,   Max: %4i'%(i,self.servos[i]._min,self.servos[i]._center,self.servos[i]._max))                    
+                        break
+
+                    elif userInput == 'oneServo':
+                        # Reset all servos to center value, and send command
+                        self.reset_all_servos_off()
+                        self.send_servo_msg()
+
+                        # First get servo number to command
+                        nSrv = -1
+                        while (1):
+                            userInput = input('Which servo to control? Enter a number 1 through 12: ')
+                            
+                            if userInput not in range(1,numServos+1):
+                                print("Invalid servo number entered, try again")
+                            else:
+                                nSrv = userInput - 1
+                                break
+
+                        # Loop and act on user command
+                        print('Enter command, q to go back to option select: ')
+                        while (1):
+                        
+                            userInput = self.getKey()
+
+                            if userInput == 'q':
+                                break
+                            elif userInput not in keyDict:
+                                print('Key not in valid key commands, try again')
+                            else:
+                                keyDict[userInput](self.servos[nSrv])
+                                print('Servo %2i cmd: %4i'%(nSrv,self.servos[nSrv].value))
+                                self.send_servo_msg()
+
+                    elif userInput == 'allServos':
+                        # Reset all servos to center value, and send command
+                        self.reset_all_servos_center()
+                        self.send_servo_msg()
+
+                        print('Enter command, q to go back to option select: ')                   
+                        while (1):
+
+                            userInput = self.getKey()
+
+                            if userInput == 'q':
+                                break
+                            elif userInput not in keyDict:
+                                print('Key not in valid key commands, try again')
+                            elif userInput in ('b','n','m'):
+                                print('Saving values not supported in all servo control mode')
+                            else:
+                                for s in self.servos.values():
+                                    keyDict[userInput](s)
+                                print('All Servos Commanded')
+                                self.send_servo_msg()
+                                    
+
+
+
+
+
+
+                # print self._last_time_cmd_rcv, self.is_controller_connected
+                # if not self.is_controller_connected:
+                #     self.set_actuators_idle()
+            
+                # Set the control rate in Hz
+                #rate = rospy.Rate(10)
+                rate.sleep()
+        except KeyboardInterrupt:
+            pass
 
 def main(args=None):
     rclpy.init(args=args)
     
     servo_ctrl_node = SpotMicroServoControl()
 
-    rclpy.spin(servo_ctrl_node)
+    # Spin in a separate thread for rate 
+    # https://answers.ros.org/question/358343/rate-and-sleep-function-in-rclpy-library-for-ros2/
+    thread = threading.Thread(target=rclpy.spin, args=(servo_ctrl_node, ), daemon=True)
+    thread.start()
 
-    servo_ctrl_node.destroy+node()
+    #rclpy.spin(servo_ctrl_node)
+
+    servo_ctrl_node.destroy_node()
 
     rclpy.shutdown()
+    thread.join()
 
 if __name__ == "__main__":
     main()

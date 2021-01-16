@@ -888,6 +888,8 @@ public:
         "servos_proportional", 500, std::bind(&I2CPwmBoard::servos_proportional, this, _1));
     drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500,
                                                                      std::bind(&I2CPwmBoard::servos_drive, this, _1));
+
+    _load_params();
   }
 
   int _load_params(void)

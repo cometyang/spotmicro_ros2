@@ -74,6 +74,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
  install(TARGETS
    talker
    listener
+   i2cpwm_board
    DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

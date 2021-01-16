@@ -870,7 +870,11 @@ class I2CPwmBoard : public rclcpp::Node
 {
 public:
   I2CPwmBoard() : Node("i2cpwm_board")
+
+
   {
+    RCLCPP_INFO(get_logger(), "Initializing i2cpwm_board node ...");
+
     freq_srv = this->create_service<i2cpwmboard::srv::IntValue>("set_pwm_frequency", &set_pwm_frequency);
 
     config_srv = this->create_service<i2cpwmboard::srv::ServosConfig>("config_servos", &config_servos);
@@ -888,8 +892,10 @@ public:
         "servos_proportional", 500, std::bind(&I2CPwmBoard::servos_proportional, this, _1));
     drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500,
                                                                      std::bind(&I2CPwmBoard::servos_drive, this, _1));
-
+    RCLCPP_INFO(get_logger(), "Loading i2cpwm_board parameters ...");
     _load_params();
+    RCLCPP_INFO(get_logger(), "Finished i2cpwm_board initializaton");
+
   }
 
   int _load_params(void)
@@ -1098,6 +1104,9 @@ private:
 
     if (_active_drive.mode == MODE_UNDEFINED)
     {
+
+
+
       RCLCPP_ERROR(g_node->get_logger(), "drive mode not set");
       return;
     }
@@ -1276,6 +1285,11 @@ private:
 int main(int argc, char* argv[])
 {
   using namespace std::chrono_literals;
+    // globals
+    _controller_io_device = 1;	// default I2C device on RPi2 and RPi3 = "/dev/i2c-1" Orange Pi Lite = "/dev/i2c-0"
+    _controller_io_handle = 0;
+    _pwm_frequency = 50;		// set the initial pulse frequency to 50 Hz which is standard for RC servos
+
 
   // setup ROS
   rclcpp::init(argc, argv);
@@ -1283,7 +1297,10 @@ int main(int argc, char* argv[])
   g_node = std::make_shared<I2CPwmBoard>();
 
   rclcpp::spin(g_node);
+
+
   rclcpp::shutdown();
   g_node = nullptr;
+  close(_controller_io_handle);
   return 0;
 }

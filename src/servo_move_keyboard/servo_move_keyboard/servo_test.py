@@ -205,11 +205,12 @@ class SpotMicroServoControl(Node):
                         nSrv = -1
                         while (1):
                             userInput = input('Which servo to control? Enter a number 1 through 12: ')
-                            
-                            if userInput not in range(1,numServos+1):
+                            print(f"You input is {userInput}, and we have {numServos} servos")
+                            selectServo = int(userInput)
+                            if  selectServo not in range(1,numServos+1):
                                 print("Invalid servo number entered, try again")
                             else:
-                                nSrv = userInput - 1
+                                nSrv = selectServo - 1
                                 break
 
                         # Loop and act on user command

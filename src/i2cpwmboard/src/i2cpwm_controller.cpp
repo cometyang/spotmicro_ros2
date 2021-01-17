@@ -115,7 +115,7 @@ enum pwm_regs
   __OUTDRV = 0x04
 };
 
-#define MAX_BOARDS 62
+#define MAX_BOARDS 1
 #define MAX_SERVOS (16 * MAX_BOARDS)
 
 servo_config _servo_configs[MAX_SERVOS];  // we can support up to 62 boards (1..62), each with 16 PWM devices (1..16)
@@ -574,46 +574,7 @@ static int _config_drive_mode(std::string mode, float rpm, float radius, float t
   return 0;
 }
 
-/**
- \private method to initialize private internal data structures at startup
-@param devicename a string value indicating the linux I2C device
-Example _init ("/dev/i2c-1");  // default I2C device on RPi2 and RPi3 = "/dev/i2c-1"
- */
-static void _init(const char* filename)
-{
-  int res;
-  char mode1res;
-  int i;
 
-  /* initialize all of the global data objects */
-
-  for (i = 0; i < MAX_BOARDS; i++)
-    _pwm_boards[i] = -1;
-  _active_board = -1;
-
-  for (i = 0; i < (MAX_SERVOS); i++)
-  {
-    // these values have not useful meaning
-    _servo_configs[i].center = -1;
-    _servo_configs[i].range = -1;
-    _servo_configs[i].direction = 1;
-    _servo_configs[i].mode_pos = -1;
-  }
-  _last_servo = -1;
-
-  _active_drive.mode = MODE_UNDEFINED;
-  _active_drive.rpm = -1.0;
-  _active_drive.radius = -1.0;
-  _active_drive.track = -1.0;
-  _active_drive.scale = -1.0;
-
-  if ((_controller_io_handle = open(filename, O_RDWR)) < 0)
-  {
-    RCLCPP_FATAL(g_node->get_logger(), "Failed to open I2C bus %s", filename);
-    return; /* exit(1) */ /* additional ERROR HANDLING information is available with 'errno' */
-  }
-  RCLCPP_INFO(g_node->get_logger(), "I2C bus opened on %s", filename);
-}
 
 // ------------------------------------------------------------------------------------------------------------------------------------
 /**@}*/
@@ -892,162 +853,11 @@ public:
         "servos_proportional", 500, std::bind(&I2CPwmBoard::servos_proportional, this, _1));
     drive_sub = this->create_subscription<geometry_msgs::msg::Twist>("servos_drive", 500,
                                                                      std::bind(&I2CPwmBoard::servos_drive, this, _1));
-    RCLCPP_INFO(get_logger(), "Loading i2cpwm_board parameters ...");
-    _load_params();
-    RCLCPP_INFO(get_logger(), "Finished i2cpwm_board initializaton");
+
 
   }
 
-  int _load_params(void)
-  {
-    // default I2C device on RPi2 and RPi3 = "/dev/i2c-1" Orange Pi Lite = "/dev/i2c-0"
-    get_parameter_or("i2c_device_number", _controller_io_device, 1);
-    std::stringstream device;
-    device << "/dev/i2c-" << _controller_io_device;
-    _init (device.str().c_str());
-
-    _set_active_board (1);
-
-    int pwm;
-    get_parameter_or("pwm_frequency", pwm, 50);
-    _set_pwm_frequency (pwm);
-
-	/*
-	  // note: servos are numbered sequntially with '1' being the first servo on board #1, '17' is the first servo on board #2 	  
-      servo_config:
-	  	- {servo: 1, center: 333, direction: -1, range: 100}
-		- {servo: 2, center: 336, direction: 1, range: 108}
-	*/
-	// attempt to load configuration for servos
-    rclcpp::Parameter parameter; 
-	if(get_parameter("servo_config", parameter)) {
-      XmlRpc::XmlRpcValue servos;
-      get_parameter("servo_config", servos);
-
-      if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
-      {
-        RCLCPP_DEBUG(get_logger(), "Retrieving members from 'servo_config' in namespace(%s)",
-                     get_namespace());
-
-        for (int32_t i = 0; i < servos.size(); i++)
-        {
-          XmlRpc::XmlRpcValue servo;
-          servo = servos[i];  // get the data from the iterator
-          if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
-          {
-            RCLCPP_DEBUG(get_logger(), "Retrieving items from 'servo_config' member %d in namespace(%s)", i,
-                         get_namespace());
-
-            // get the servo settings
-            int id, center, direction, range;
-            id = _get_int_param(servo, "servo");
-            center = _get_int_param(servo, "center");
-            direction = _get_int_param(servo, "direction");
-            range = _get_int_param(servo, "range");
-
-            if (id && center && direction && range)
-            {
-              if ((id >= 1) && (id <= MAX_SERVOS))
-              {
-                int board = ((int)(id / 16)) + 1;
-                _set_active_board(board);
-                _set_pwm_frequency(pwm);
-                _config_servo(id, center, range, direction);
-              }
-              else
-                RCLCPP_WARN(get_logger(), "Parameter servo=%d is out of bounds", id);
-            }
-            else
-              RCLCPP_WARN(get_logger(), "Invalid parameters for servo=%d'", id);
-          }
-          else
-             RCLCPP_WARN(get_logger(),"Invalid type %d for member of 'servo_config' - expected TypeStruct(%d)", servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
-        }
-      }
-      else
-        RCLCPP_WARN(get_logger(), "Invalid type %d for 'servo_config' - expected TypeArray(%d)",
-                    servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
-	}
-	else
-		RCLCPP_DEBUG(get_logger(),"Parameter Server namespace[%s] does not contain 'servo_config",get_namespace());
-
-	/*
-	  drive_config:
-	  	mode: mecanum
-		radius: 0.062
-		rpm: 60.0
-		scale: 0.3
-		track: 0.2
-		servos:
-			- {servo: 1, position: 1}
-			- {servo: 2, position: 2}
-			- {servo: 3, position: 3}
-			- {servo: 4, position: 4}
-	*/
-
-	// attempt to load configuration for drive mode
-	if(get_parameter("drive_config", parameter)) {
-      XmlRpc::XmlRpcValue drive;
-      get_parameter("drive_config", drive);
-
-      if (drive.getType() == XmlRpc::XmlRpcValue::TypeStruct)
-      {
-        RCLCPP_DEBUG(get_logger(), "Retrieving members from 'drive_config' in namespace(%s)",
-                     get_namespace());
-
-        // get the drive mode settings
-        std::string mode;
-        float radius, rpm, scale, track;
-        int id, position;
-
-        mode = _get_string_param(drive, "mode");
-        rpm = _get_float_param(drive, "rpm");
-        radius = _get_float_param(drive, "radius");
-        track = _get_float_param(drive, "track");
-        scale = _get_float_param(drive, "scale");
-
-        _config_drive_mode(mode, rpm, radius, track, scale);
-
-        XmlRpc::XmlRpcValue& servos = drive["servos"];
-        if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
-        {
-          RCLCPP_DEBUG(get_logger(), "Retrieving members from 'drive_config/servos' in namespace(%s)",
-                       get_namespace());
-
-          for (int32_t i = 0; i < servos.size(); i++)
-          {
-            XmlRpc::XmlRpcValue servo;
-            servo = servos[i];  // get the data from the iterator
-            if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
-            {
-              RCLCPP_DEBUG(get_logger(),
-                           "Retrieving items from 'drive_config/servos' member %d in namespace(%s)", i,
-                           get_namespace());
-
-              // get the servo position settings
-              int id, position;
-              id = _get_int_param(servo, "servo");
-              position = _get_int_param(servo, "position");
-
-              if (id && position)
-                _config_servo_position(id, position);  // had its own error reporting
-            }
-            else
-                RCLCPP_WARN(get_logger(),"Invalid type %d for member %d of 'drive_config/servos' - expected TypeStruct(%d)", i, servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
-          }
-        }
-        else
-          RCLCPP_WARN(get_logger(), "Invalid type %d for 'drive_config/servos' - expected TypeArray(%d)",
-                      servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
-      }
-      else
-        RCLCPP_WARN(get_logger(), "Invalid type %d for 'drive_config' - expected TypeStruct(%d)",
-                    drive.getType(), XmlRpc::XmlRpcValue::TypeStruct);
-	}
-	else
-		RCLCPP_DEBUG(get_logger(),"Parameter Server namespace[%s] does not contain 'drive_config",
-    get_namespace());
-  }
+ 
 
 private:
   void topic_callback(const std_msgs::msg::String::SharedPtr msg) const
@@ -1271,6 +1081,8 @@ private:
     }
   }
 
+
+
   rclcpp::Service<i2cpwmboard::srv::DriveMode>::SharedPtr mode_srv;
   rclcpp::Service<i2cpwmboard::srv::ServosConfig>::SharedPtr config_srv;
   rclcpp::Service<i2cpwmboard::srv::IntValue>::SharedPtr freq_srv;
@@ -1281,6 +1093,199 @@ private:
   rclcpp::Subscription<i2cpwmboard::msg::ServoArray>::SharedPtr rel_sub;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr drive_sub;
 };
+ 
+/**
+ \private method to initialize private internal data structures at startup
+@param devicename a string value indicating the linux I2C device
+Example _init ("/dev/i2c-1");  // default I2C device on RPi2 and RPi3 = "/dev/i2c-1"
+ */
+static void _init_i2cboard(const char* filename)
+{
+  int res;
+  char mode1res;
+  int i;
+
+  /* initialize all of the global data objects */
+
+  for (i = 0; i < MAX_BOARDS; i++)
+    _pwm_boards[i] = -1;
+  _active_board = -1;
+
+  for (i = 0; i < (MAX_SERVOS); i++)
+  {
+    // these values have not useful meaning
+    _servo_configs[i].center = -1;
+    _servo_configs[i].range = -1;
+    _servo_configs[i].direction = 1;
+    _servo_configs[i].mode_pos = -1;
+  }
+  _last_servo = -1;
+
+  _active_drive.mode = MODE_UNDEFINED;
+  _active_drive.rpm = -1.0;
+  _active_drive.radius = -1.0;
+  _active_drive.track = -1.0;
+  _active_drive.scale = -1.0;
+
+  //RCLCPP_INFO(g_node->get_logger(), "I2C bus opening on %s ...", filename);
+  if ((_controller_io_handle = open(filename, O_RDWR)) < 0)
+  {
+    RCLCPP_FATAL(g_node->get_logger(), "Failed to open I2C bus %s", filename);
+    return; /* exit(1) */ /* additional ERROR HANDLING information is available with 'errno' */
+  }
+  //RCLCPP_INFO(g_node->get_logger(), "I2C bus opened on %s", filename);
+}
+
+ int _load_params(void)
+  {
+    // default I2C device on RPi2 and RPi3 = "/dev/i2c-1" Orange Pi Lite = "/dev/i2c-0"
+    g_node->get_parameter_or("i2c_device_number", _controller_io_device, 1);
+    std::stringstream device;
+    device << "/dev/i2c-" << _controller_io_device;
+    _init_i2cboard (device.str().c_str());
+    _set_active_board (1);
+    RCLCPP_INFO(g_node->get_logger(), "Setup PWM Frequency ...");
+    int pwm;
+    g_node->get_parameter_or("pwm_frequency", pwm, 50);
+    _set_pwm_frequency (pwm);
+
+	/*
+	  // note: servos are numbered sequntially with '1' being the first servo on board #1, '17' is the first servo on board #2 	  
+      servo_config:
+	  	- {servo: 1, center: 333, direction: -1, range: 100}
+		- {servo: 2, center: 336, direction: 1, range: 108}
+	*/
+	// attempt to load configuration for servos
+    rclcpp::Parameter parameter; 
+	if(g_node->get_parameter("servo_config", parameter)) {
+      XmlRpc::XmlRpcValue servos;
+      g_node->get_parameter("servo_config", servos);
+
+      if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
+      {
+        RCLCPP_DEBUG(g_node->get_logger(), "Retrieving members from 'servo_config' in namespace(%s)",
+                     g_node->get_namespace());
+
+        for (int32_t i = 0; i < servos.size(); i++)
+        {
+          XmlRpc::XmlRpcValue servo;
+          servo = servos[i];  // get the data from the iterator
+          if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+          {
+            RCLCPP_DEBUG(g_node->get_logger(), "Retrieving items from 'servo_config' member %d in namespace(%s)", i,
+                         g_node->get_namespace());
+
+            // get the servo settings
+            int id, center, direction, range;
+            id = _get_int_param(servo, "servo");
+            center = _get_int_param(servo, "center");
+            direction = _get_int_param(servo, "direction");
+            range = _get_int_param(servo, "range");
+
+            if (id && center && direction && range)
+            {
+              if ((id >= 1) && (id <= MAX_SERVOS))
+              {
+                int board = ((int)(id / 16)) + 1;
+                _set_active_board(board);
+                _set_pwm_frequency(pwm);
+                _config_servo(id, center, range, direction);
+              }
+              else
+                RCLCPP_WARN(g_node->get_logger(), "Parameter servo=%d is out of bounds", id);
+            }
+            else
+              RCLCPP_WARN(g_node->get_logger(), "Invalid parameters for servo=%d'", id);
+          }
+          else
+             RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for member of 'servo_config' - expected TypeStruct(%d)", servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+        }
+      }
+      else
+        RCLCPP_WARN(g_node->get_logger(), "Invalid type %d for 'servo_config' - expected TypeArray(%d)",
+                    servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
+	}
+	else
+		RCLCPP_DEBUG(g_node->get_logger(),"Parameter Server namespace[%s] does not contain 'servo_config",g_node->get_namespace());
+
+	/*
+	  drive_config:
+	  	mode: mecanum
+		radius: 0.062
+		rpm: 60.0
+		scale: 0.3
+		track: 0.2
+		servos:
+			- {servo: 1, position: 1}
+			- {servo: 2, position: 2}
+			- {servo: 3, position: 3}
+			- {servo: 4, position: 4}
+	*/
+
+	// attempt to load configuration for drive mode
+	if(g_node->get_parameter("drive_config", parameter)) {
+      XmlRpc::XmlRpcValue drive;
+      g_node->get_parameter("drive_config", drive);
+
+      if (drive.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+      {
+        RCLCPP_DEBUG(g_node->get_logger(), "Retrieving members from 'drive_config' in namespace(%s)",
+                     g_node->get_namespace());
+
+        // get the drive mode settings
+        std::string mode;
+        float radius, rpm, scale, track;
+        int id, position;
+
+        mode = _get_string_param(drive, "mode");
+        rpm = _get_float_param(drive, "rpm");
+        radius = _get_float_param(drive, "radius");
+        track = _get_float_param(drive, "track");
+        scale = _get_float_param(drive, "scale");
+
+        _config_drive_mode(mode, rpm, radius, track, scale);
+
+        XmlRpc::XmlRpcValue& servos = drive["servos"];
+        if (servos.getType() == XmlRpc::XmlRpcValue::TypeArray)
+        {
+          RCLCPP_DEBUG(g_node->get_logger(), "Retrieving members from 'drive_config/servos' in namespace(%s)",
+                       g_node->get_namespace());
+
+          for (int32_t i = 0; i < servos.size(); i++)
+          {
+            XmlRpc::XmlRpcValue servo;
+            servo = servos[i];  // get the data from the iterator
+            if (servo.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+            {
+              RCLCPP_DEBUG(g_node->get_logger(),
+                           "Retrieving items from 'drive_config/servos' member %d in namespace(%s)", i,
+                           g_node->get_namespace());
+
+              // get the servo position settings
+              int id, position;
+              id = _get_int_param(servo, "servo");
+              position = _get_int_param(servo, "position");
+
+              if (id && position)
+                _config_servo_position(id, position);  // had its own error reporting
+            }
+            else
+                RCLCPP_WARN(g_node->get_logger(),"Invalid type %d for member %d of 'drive_config/servos' - expected TypeStruct(%d)", i, servo.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+          }
+        }
+        else
+          RCLCPP_WARN(g_node->get_logger(), "Invalid type %d for 'drive_config/servos' - expected TypeArray(%d)",
+                      servos.getType(), XmlRpc::XmlRpcValue::TypeArray);
+      }
+      else
+        RCLCPP_WARN(g_node->get_logger(), "Invalid type %d for 'drive_config' - expected TypeStruct(%d)",
+                    drive.getType(), XmlRpc::XmlRpcValue::TypeStruct);
+	}
+	else
+		RCLCPP_DEBUG(g_node->get_logger(),"Parameter Server namespace[%s] does not contain 'drive_config",
+    g_node->get_namespace());
+  }
+
 
 int main(int argc, char* argv[])
 {
@@ -1295,7 +1300,9 @@ int main(int argc, char* argv[])
   rclcpp::init(argc, argv);
 
   g_node = std::make_shared<I2CPwmBoard>();
-
+  RCLCPP_INFO(g_node->get_logger(), "Loading i2cpwm_board parameters ...");
+  _load_params();
+  RCLCPP_INFO(g_node->get_logger(), "Finished i2cpwm_board initializaton");
   rclcpp::spin(g_node);
 
 

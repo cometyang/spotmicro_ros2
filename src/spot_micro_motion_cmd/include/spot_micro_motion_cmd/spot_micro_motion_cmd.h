@@ -72,10 +72,8 @@ class SpotMicroMotionCmd: public rclcpp::Node
 {
  public:
   // Constructor
-  SpotMicroMotionCmd(): Node("spotmicro_motion_cmd")
-  {
-
-  }; 
+  SpotMicroMotionCmd();
+  
   
   // Main loop runner, called periodically at the loop rate
   void runOnce();
@@ -172,7 +170,7 @@ class SpotMicroMotionCmd: public rclcpp::Node
 //   tf2_ros::StaticTransformBroadcaster static_transform_br_;
 
 //   // Message for encapsulating robot body state
-//   std_msgs::Float32MultiArray body_state_msg_;
+ // std_msgs::msg::Float32MultiArray body_state_msg_;
 
 //   // Messages to hold robot state information for displaying on LCD monitor
 //   // and for any other monitoring purposes.
@@ -181,10 +179,10 @@ class SpotMicroMotionCmd: public rclcpp::Node
 //   geometry_msgs::Vector3 lcd_angle_cmd_msg_;
 
   // Callback method for stand command
-//   void standCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
+  // void standCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
 
-//   // Callback method for idle command
-//   void idleCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
+  // // Callback method for idle command
+  // void idleCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
 
 //   // Callback method for walk command
 //   void walkCommandCallback(const std_msgs::Bool::ConstPtr& msg);
@@ -192,10 +190,10 @@ class SpotMicroMotionCmd: public rclcpp::Node
 //   // Callback method for angle command
 //   void angleCommandCallback(const geometry_msgs::Vector3ConstPtr& msg);
 
-//   // Callback method for velocity command
-//   // Currently, the only supported commands from this message are 
-//   // x and y axis linear velocity, and z axis angular rate 
-//   void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
+  // Callback method for velocity command
+  // Currently, the only supported commands from this message are 
+  // x and y axis linear velocity, and z axis angular rate 
+  // void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
 
   // Resets all events if they were true
   void resetEventCommands();

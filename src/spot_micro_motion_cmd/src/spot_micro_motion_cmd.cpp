@@ -27,19 +27,18 @@ using namespace geometry_msgs;
 typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 
 // // Constructor
-// SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh) {
+SpotMicroMotionCmd::SpotMicroMotionCmd(): Node("spotmicro_motion_cmd") {
 
-//   nh_ = nh;
-//   pnh_ = pnh;
-//   if (smnc_.debug_mode) {
-//     std::cout<<"from Constructor \n";
-//   }
 
-//   // Initialize Command 
-//   cmd_ = Command();
+  if (smnc_.debug_mode) {
+    std::cout<<"from Constructor \n";
+  }
 
-//   // Initialize state to Idle state
-//   state_ = std::make_unique<SpotMicroIdleState>();
+  // Initialize Command 
+  cmd_ = Command();
+
+  // Initialize state to Idle state
+  state_ = std::make_unique<SpotMicroIdleState>();
 
 //   // Read in config parameters into smnc_
 //   readInConfigParameters();
@@ -137,7 +136,7 @@ typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 
 //   // Publish static transforms
 //   publishStaticTransforms();
-// }
+}
 
 
 // // Destructor method
@@ -150,7 +149,7 @@ typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 // }
 
 
-// void SpotMicroMotionCmd::runOnce() {
+void SpotMicroMotionCmd::runOnce() {
 //   if (smnc_.debug_mode) {
 //     std::cout<<"from Runonce \n";
 //   }
@@ -177,7 +176,7 @@ typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 //     // Integrate robot odometry
 //     integrateOdometry();
 //   }
-// }
+}
 
 
 bool SpotMicroMotionCmd::publishServoConfiguration() {  
@@ -214,10 +213,10 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
 }
 
 
-// void SpotMicroMotionCmd::setServoCommandMessageData() {
-//   // Set the state of the spot micro kinematics object by setting the foot
-//   // positions, body position, and body orientation. Retrieve joint angles and
-//   // set the servo cmd message data
+void SpotMicroMotionCmd::setServoCommandMessageData() {
+  // Set the state of the spot micro kinematics object by setting the foot
+  // positions, body position, and body orientation. Retrieve joint angles and
+  // set the servo cmd message data
 //   sm_.setBodyState(body_state_cmd_);
 //   LegsJointAngles joint_angs = sm_.getLegsJointAngles();
 
@@ -237,10 +236,10 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
 //   servo_cmds_rad_["LB_1"] = joint_angs.left_back.ang1;
 //   servo_cmds_rad_["LB_2"] = joint_angs.left_back.ang2;
 //   servo_cmds_rad_["LB_3"] = joint_angs.left_back.ang3;
-// }
+}
 
 
-// void SpotMicroMotionCmd::publishServoProportionalCommand() {
+void SpotMicroMotionCmd::publishServoProportionalCommand() {
 //   for (std::map<std::string, std::map<std::string, float>>::iterator
 //        iter = smnc_.servo_config.begin();
 //        iter != smnc_.servo_config.end();
@@ -272,13 +271,13 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
 
 //  // Publish message
 //  servos_proportional_pub_.publish(servo_array_);
-// }
+}
 
 
-// void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand() {
-//   // Publish the servo absolute message
-//   servos_absolute_pub_.publish(servo_array_absolute_);
-// }
+void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand() {
+  // Publish the servo absolute message
+  //servos_absolute_pub_.publish(servo_array_absolute_);
+}
 
 
 SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
@@ -286,47 +285,47 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 }
 
 
-// LegsFootPos SpotMicroMotionCmd::getNeutralStance() {
-//   float len = smnc_.smc.body_length; // body length
-//   float width = smnc_.smc.body_width; // body width
-//   float l1 = smnc_.smc.hip_link_length; // liength of the hip link
-//   float f_offset = smnc_.stand_front_x_offset; // x offset for front feet in neutral stance
-//   float b_offset = smnc_.stand_back_x_offset; // y offset for back feet in neutral stance
+LegsFootPos SpotMicroMotionCmd::getNeutralStance() {
+  float len = smnc_.smc.body_length; // body length
+  float width = smnc_.smc.body_width; // body width
+  float l1 = smnc_.smc.hip_link_length; // liength of the hip link
+  float f_offset = smnc_.stand_front_x_offset; // x offset for front feet in neutral stance
+  float b_offset = smnc_.stand_back_x_offset; // y offset for back feet in neutral stance
 
-//   LegsFootPos neutral_stance;
-//   neutral_stance.right_back  = {.x = -len/2 + b_offset, .y = 0.0f, .z =  width/2 + l1};
-//   neutral_stance.right_front = {.x =  len/2 + f_offset, .y = 0.0f, .z =  width/2 + l1};
-//   neutral_stance.left_front  = {.x =  len/2 + f_offset, .y = 0.0f, .z = -width/2 - l1};
-//   neutral_stance.left_back   = {.x = -len/2 + b_offset, .y = 0.0f, .z = -width/2 - l1};
+  LegsFootPos neutral_stance;
+  neutral_stance.right_back  = {.x = -len/2 + b_offset, .y = 0.0f, .z =  width/2 + l1};
+  neutral_stance.right_front = {.x =  len/2 + f_offset, .y = 0.0f, .z =  width/2 + l1};
+  neutral_stance.left_front  = {.x =  len/2 + f_offset, .y = 0.0f, .z = -width/2 - l1};
+  neutral_stance.left_back   = {.x = -len/2 + b_offset, .y = 0.0f, .z = -width/2 - l1};
 
-//   return neutral_stance;
-// }
-
-
-// LegsFootPos SpotMicroMotionCmd::getLieDownStance() {
-//   float len = smnc_.smc.body_length; // body length
-//   float width = smnc_.smc.body_width; // body width
-//   float l1 = smnc_.smc.hip_link_length; // length of the hip link
-//   float x_off = smnc_.lie_down_feet_x_offset;
-
-//   LegsFootPos lie_down_stance;
-//   lie_down_stance.right_back  = {.x = -len/2 + x_off, .y = 0.0f, .z =  width/2 + l1};
-//   lie_down_stance.right_front = {.x =  len/2 + x_off, .y = 0.0f, .z =  width/2 + l1};
-//   lie_down_stance.left_front  = {.x =  len/2 + x_off, .y = 0.0f, .z = -width/2 - l1};
-//   lie_down_stance.left_back   = {.x = -len/2 + x_off, .y = 0.0f, .z = -width/2 - l1};
-
-//   return lie_down_stance;
-// }
+  return neutral_stance;
+}
 
 
-// void SpotMicroMotionCmd::commandIdle() {
-//   cmd_.idle_cmd_ = true;
-// }
+LegsFootPos SpotMicroMotionCmd::getLieDownStance() {
+  float len = smnc_.smc.body_length; // body length
+  float width = smnc_.smc.body_width; // body width
+  float l1 = smnc_.smc.hip_link_length; // length of the hip link
+  float x_off = smnc_.lie_down_feet_x_offset;
+
+  LegsFootPos lie_down_stance;
+  lie_down_stance.right_back  = {.x = -len/2 + x_off, .y = 0.0f, .z =  width/2 + l1};
+  lie_down_stance.right_front = {.x =  len/2 + x_off, .y = 0.0f, .z =  width/2 + l1};
+  lie_down_stance.left_front  = {.x =  len/2 + x_off, .y = 0.0f, .z = -width/2 - l1};
+  lie_down_stance.left_back   = {.x = -len/2 + x_off, .y = 0.0f, .z = -width/2 - l1};
+
+  return lie_down_stance;
+}
 
 
-// std::string SpotMicroMotionCmd::getCurrentStateName() {
-//   return state_->getCurrentStateName();
-// }
+void SpotMicroMotionCmd::commandIdle() {
+  cmd_.idle_cmd_ = true;
+}
+
+
+std::string SpotMicroMotionCmd::getCurrentStateName() {
+  return state_->getCurrentStateName();
+}
 
 
 // void SpotMicroMotionCmd::readInConfigParameters() {
@@ -448,38 +447,38 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 // }
 
 
-// void SpotMicroMotionCmd::resetEventCommands() {
-//   // Reset all event commands, setting all command states false if they were true 
-//   cmd_.resetEventCmds(); 
-// }
+void SpotMicroMotionCmd::resetEventCommands() {
+  // Reset all event commands, setting all command states false if they were true 
+  cmd_.resetEventCmds(); 
+}
 
 
-// void SpotMicroMotionCmd::handleInputCommands() {
-//   // Delegate input handling to state
-//   state_->handleInputCommands(sm_.getBodyState(), smnc_, cmd_, this, &body_state_cmd_);
-// }
+void SpotMicroMotionCmd::handleInputCommands() {
+  // Delegate input handling to state
+  state_->handleInputCommands(sm_.getBodyState(), smnc_, cmd_, this, &body_state_cmd_);
+}
 
 
-// void SpotMicroMotionCmd::changeState(std::unique_ptr<SpotMicroState> sms) {
-//   // Change the active state
-//   state_ = std::move(sms);
+void SpotMicroMotionCmd::changeState(std::unique_ptr<SpotMicroState> sms) {
+  // Change the active state
+  state_ = std::move(sms);
 
-//   // Call init method of new state
-//   state_->init(sm_.getBodyState(), smnc_, cmd_, this);
+  // Call init method of new state
+  state_->init(sm_.getBodyState(), smnc_, cmd_, this);
 
-//   // Reset all command values
-//   cmd_.resetAllCommands();
-// }
+  // Reset all command values
+  cmd_.resetAllCommands();
+}
 
 
-// void SpotMicroMotionCmd::publishBodyState() {
-//   // Order of the float array:
-//   // 3 floats xyz for rightback leg foot pos
-//   // 3 floats xyz for rightfront leg foot pos
-//   // 3 floats xyz for leftfront leg foot pos
-//   // 3 floats xyz for leftback leg foot pos
-//   // 3 floats for xyz body position
-//   // 3 floats for phi, theta, psi body angles
+void SpotMicroMotionCmd::publishBodyState() {
+  // Order of the float array:
+  // 3 floats xyz for rightback leg foot pos
+  // 3 floats xyz for rightfront leg foot pos
+  // 3 floats xyz for leftfront leg foot pos
+  // 3 floats xyz for leftback leg foot pos
+  // 3 floats for xyz body position
+  // 3 floats for phi, theta, psi body angles
   
 //   body_state_msg_.data[0] = body_state_cmd_.leg_feet_pos.right_back.x;
 //   body_state_msg_.data[1] = body_state_cmd_.leg_feet_pos.right_back.y;
@@ -506,10 +505,10 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 //   body_state_msg_.data[17] = body_state_cmd_.euler_angs.psi;
 
 //   body_state_pub_.publish(body_state_msg_);
-// }
+}
 
 
-// void SpotMicroMotionCmd::publishLcdMonitorData() {
+void SpotMicroMotionCmd::publishLcdMonitorData() {
 //   lcd_state_string_msg_.data = getCurrentStateName();
 
 //   lcd_vel_cmd_msg_.linear.x = cmd_.getXSpeedCmd();
@@ -523,10 +522,10 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 //   lcd_state_pub_.publish(lcd_state_string_msg_);
 //   lcd_vel_cmd_pub_.publish(lcd_vel_cmd_msg_);
 //   lcd_angle_cmd_pub_.publish(lcd_angle_cmd_msg_);
-// }
+}
 
 
-// void SpotMicroMotionCmd::publishStaticTransforms() {
+void SpotMicroMotionCmd::publishStaticTransforms() {
 
 //   TransformStamped tr_stamped;
   
@@ -577,10 +576,10 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 //                                0.0, 0.0, 0.0);
 //     static_transform_br_.sendTransform(tr_stamped); 
 //   }
-// }
+}
 
 
-// void SpotMicroMotionCmd::publishDynamicTransforms() {
+void SpotMicroMotionCmd::publishDynamicTransforms() {
 
 //   // Get joint angles
 //   LegsJointAngles joint_angs = sm_.getLegsJointAngles();
@@ -703,35 +702,35 @@ SpotMicroNodeConfig SpotMicroMotionCmd::getNodeConfig() {
 //                                       0.0, 0.0, -smnc_.smc.upper_leg_link_length,
 //                                       0.0, joint_angs.left_back.ang3, 0.0);                         
 //   transform_br_.sendTransform(transform_stamped);
-// }
+}
 
 
-// void SpotMicroMotionCmd::integrateOdometry() {
-//   // Get loop time, heading, and rate commands
-//   float dt = smnc_.dt;
-//   float psi = robot_odometry_.euler_angs.psi;
-//   float x_spd = cmd_.getXSpeedCmd();
-//   float y_spd = -cmd_.getYSpeedCmd();
-//   float yaw_rate = -cmd_.getYawRateCmd();
+void SpotMicroMotionCmd::integrateOdometry() {
+  // Get loop time, heading, and rate commands
+  float dt = smnc_.dt;
+  float psi = robot_odometry_.euler_angs.psi;
+  float x_spd = cmd_.getXSpeedCmd();
+  float y_spd = -cmd_.getYSpeedCmd();
+  float yaw_rate = -cmd_.getYawRateCmd();
 
-//   // This is the odometry coordinate frame (not the robot kinematic frame) 
-//   float x_dot = x_spd*cos(psi) - y_spd*sin(psi);
-//   float y_dot = x_spd*sin(psi) + y_spd*cos(psi);
-//   float yaw_dot = yaw_rate;
+  // This is the odometry coordinate frame (not the robot kinematic frame) 
+  float x_dot = x_spd*cos(psi) - y_spd*sin(psi);
+  float y_dot = x_spd*sin(psi) + y_spd*cos(psi);
+  float yaw_dot = yaw_rate;
 
-//   // Integrate x and y position, and yaw angle, from commanded values
-//   // y speed and yaw rate are reversed due to mismatch between command 
-//   // coordinate frame and world coordinate frame
-//   robot_odometry_.xyz_pos.x += x_dot*dt;
-//   robot_odometry_.xyz_pos.y += y_dot*dt;
-//   robot_odometry_.euler_angs.psi += yaw_dot*dt;
-// } 
+  // Integrate x and y position, and yaw angle, from commanded values
+  // y speed and yaw rate are reversed due to mismatch between command 
+  // coordinate frame and world coordinate frame
+  robot_odometry_.xyz_pos.x += x_dot*dt;
+  robot_odometry_.xyz_pos.y += y_dot*dt;
+  robot_odometry_.euler_angs.psi += yaw_dot*dt;
+} 
 
 
-// Affine3d SpotMicroMotionCmd::getOdometryTransform() {
-//   // Create odemtry translation and rotation, and combine together
-//   Translation3d translation(robot_odometry_.xyz_pos.x, robot_odometry_.xyz_pos.y, 0.0);
-//   AngleAxisd rotation(robot_odometry_.euler_angs.psi, Vector3d::UnitZ());
+Affine3d SpotMicroMotionCmd::getOdometryTransform() {
+  // Create odemtry translation and rotation, and combine together
+  Translation3d translation(robot_odometry_.xyz_pos.x, robot_odometry_.xyz_pos.y, 0.0);
+  AngleAxisd rotation(robot_odometry_.euler_angs.psi, Vector3d::UnitZ());
 
-//   return (translation * rotation);
-// }
+  return (translation * rotation);
+}

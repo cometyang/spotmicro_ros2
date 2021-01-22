@@ -1,30 +1,30 @@
 #include "spot_micro_motion_cmd.h"
 
-// #include <eigen3/Eigen/Geometry>
-// #include "std_msgs/Float32.h"
-// #include "std_msgs/Bool.h"
-// #include "std_msgs/String.h"
-// #include "std_msgs/Float32MultiArray.h"
-// #include "geometry_msgs/Vector3.h"
-// #include "geometry_msgs/Twist.h"
-// #include "tf2/LinearMath/Quaternion.h"
-// #include "tf2_eigen/tf2_eigen.h"
-// #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include <Eigen/Geometry>
+#include "std_msgs/msg/float32.hpp"
+#include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+#include "tf2/LinearMath/Quaternion.h"
+#include "tf2_eigen/tf2_eigen.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
-// #include "spot_micro_motion_cmd.h"
-// #include "spot_micro_kinematics/spot_micro_kinematics.h"
-// #include "i2cpwm_board/Servo.h"
-// #include "i2cpwm_board/ServoArray.h"
-// #include "i2cpwm_board/ServoConfig.h"
-// #include "i2cpwm_board/ServosConfig.h"
-// #include "spot_micro_idle.h"
-// #include "utils.h"
+#include "spot_micro_motion_cmd.h"
+#include "spot_micro_kinematics/spot_micro_kinematics.h"
+#include "i2cpwmboard/msg/servo.hpp"
+#include "i2cpwmboard/msg/servo_array.hpp"
+#include "i2cpwmboard/msg/servo_config.hpp"
+#include "i2cpwmboard/srv/servos_config.hpp"
+#include "spot_micro_idle.h"
+#include "utils.h"
 
 
-// using namespace smk;
-// using namespace Eigen;
-// using namespace geometry_msgs;
-// typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
+using namespace smk;
+using namespace Eigen;
+using namespace geometry_msgs;
+typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 
 // // Constructor
 // SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh) {

@@ -27,6 +27,7 @@ find_package(rosidl_default_runtime REQUIRED)     # message_runtime in ROS1
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(i2cpwmboard REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -37,7 +38,9 @@ include_directories(SYSTEM
     ${rclcpp_INCLUDE_DIRS}
     ${tf2_INCLUDE_DIRS}
     ${tf2_msgs_INCLUDE_DIRS}
+    ${tf2_eigen_INCLUDE_DIRS}
     ${tf2_ros_INCLUDE_DIRS}
+    ${tf2_geometry_msgs_INCLUDE_DIRS}
     ${i2cpwmboard_INCLUDE_DIRS}
     )
 # uncomment the following section in order to fill in

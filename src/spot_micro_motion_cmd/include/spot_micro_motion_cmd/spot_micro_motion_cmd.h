@@ -2,17 +2,21 @@
 #ifndef SPOT_MICRO_MOTION_CMD //usd for conditional compiling.
 #define SPOT_MICRO_MOTION_CMD
 
-#include <ros/ros.h>
+#include "rclcpp/rclcpp.hpp"
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include "std_msgs/Bool.h"
-#include "std_msgs/String.h"
-#include "geometry_msgs/Vector3.h"
-#include "geometry_msgs/Twist.h"
-#include "std_msgs/Float32MultiArray.h"
-#include "i2cpwm_board/Servo.h"
-#include "i2cpwm_board/ServoArray.h"
-
+#include "std_msgs/msg/bool.h"
+#include "std_msgs/msg/string.h"
+#include "geometry_msgs/msg/vector3.h"
+#include "geometry_msgs/msg/twist.h"
+#include "std_msgs/msg/float32_multi_array.h"
+#include "std_msgs/msg/bool.h"
+#include "i2cpwmboard/msg/servo.hpp"
+#include "i2cpwmboard/msg/servo_array.hpp"
+#include "i2cpwmboard/msg/servo_config.hpp"
+#include "i2cpwmboard/msg/servo_config_array.hpp"
+// request/response of the servo setup service
+#include "i2cpwmboard/srv/servos_config.hpp"
 #include "command.h"
 #include "spot_micro_kinematics/spot_micro_kinematics.h"
 #include "spot_micro_state.h"
@@ -63,14 +67,15 @@ struct SpotMicroNodeConfig {
 
 
 /* defining the class */
-class SpotMicroMotionCmd
+
+class SpotMicroMotionCmd: public rclcpp::Node
 {
  public:
   // Constructor
-  SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh); 
-  
-  // Destructor
-  ~SpotMicroMotionCmd(); 
+  SpotMicroMotionCmd(): Node("spotmicro_motion_cmd")
+  {
+
+  }; 
   
   // Main loop runner, called periodically at the loop rate
   void runOnce();
@@ -142,55 +147,55 @@ class SpotMicroMotionCmd
   void readInConfigParameters();
 
   // Servo array message for servo proportional command
-  i2cpwm_board::ServoArray servo_array_;
+  i2cpwmboard::msg::ServoArray servo_array_;
 
   // Servo array message for servo absolute command
-  i2cpwm_board::ServoArray servo_array_absolute_;
+  i2cpwmboard::msg::ServoArray servo_array_absolute_;
 
 
   // ROS publisher and subscriber handles
-  ros::NodeHandle nh_; // Defining the ros NodeHandle variable for registrating the same with the master
-  ros::NodeHandle pnh_; // Private version of node handle
-  ros::Subscriber stand_sub_; // ros subscriber handle for stand_cmd topic
-  ros::Subscriber idle_sub_; // ros subscriber handle for idle_cmd topic
-  ros::Subscriber walk_sub_;
-  ros::Subscriber vel_cmd_sub_;
-  ros::Subscriber body_angle_cmd_sub_;
-  ros::Publisher servos_absolute_pub_;
-  ros::Publisher servos_proportional_pub_;
-  ros::Publisher body_state_pub_;
-  ros::Publisher lcd_vel_cmd_pub_;
-  ros::Publisher lcd_angle_cmd_pub_;
-  ros::Publisher lcd_state_pub_;
-  ros::ServiceClient servos_config_client_;
-  tf2_ros::TransformBroadcaster transform_br_;
-  tf2_ros::StaticTransformBroadcaster static_transform_br_;
+//   ros::NodeHandle nh_; // Defining the ros NodeHandle variable for registrating the same with the master
+//   ros::NodeHandle pnh_; // Private version of node handle
+//   ros::Subscriber stand_sub_; // ros subscriber handle for stand_cmd topic
+//   ros::Subscriber idle_sub_; // ros subscriber handle for idle_cmd topic
+//   ros::Subscriber walk_sub_;
+//   ros::Subscriber vel_cmd_sub_;
+//   ros::Subscriber body_angle_cmd_sub_;
+//   ros::Publisher servos_absolute_pub_;
+//   ros::Publisher servos_proportional_pub_;
+//   ros::Publisher body_state_pub_;
+//   ros::Publisher lcd_vel_cmd_pub_;
+//   ros::Publisher lcd_angle_cmd_pub_;
+//   ros::Publisher lcd_state_pub_;
+//   ros::ServiceClient servos_config_client_;
+//   tf2_ros::TransformBroadcaster transform_br_;
+//   tf2_ros::StaticTransformBroadcaster static_transform_br_;
 
-  // Message for encapsulating robot body state
-  std_msgs::Float32MultiArray body_state_msg_;
+//   // Message for encapsulating robot body state
+//   std_msgs::Float32MultiArray body_state_msg_;
 
-  // Messages to hold robot state information for displaying on LCD monitor
-  // and for any other monitoring purposes.
-  std_msgs::String lcd_state_string_msg_;
-  geometry_msgs::Twist lcd_vel_cmd_msg_;
-  geometry_msgs::Vector3 lcd_angle_cmd_msg_;
+//   // Messages to hold robot state information for displaying on LCD monitor
+//   // and for any other monitoring purposes.
+//   std_msgs::String lcd_state_string_msg_;
+//   geometry_msgs::Twist lcd_vel_cmd_msg_;
+//   geometry_msgs::Vector3 lcd_angle_cmd_msg_;
 
   // Callback method for stand command
-  void standCommandCallback(const std_msgs::Bool::ConstPtr& msg);
+//   void standCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
 
-  // Callback method for idle command
-  void idleCommandCallback(const std_msgs::Bool::ConstPtr& msg);
+//   // Callback method for idle command
+//   void idleCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
 
-  // Callback method for walk command
-  void walkCommandCallback(const std_msgs::Bool::ConstPtr& msg);
+//   // Callback method for walk command
+//   void walkCommandCallback(const std_msgs::Bool::ConstPtr& msg);
 
-  // Callback method for angle command
-  void angleCommandCallback(const geometry_msgs::Vector3ConstPtr& msg);
+//   // Callback method for angle command
+//   void angleCommandCallback(const geometry_msgs::Vector3ConstPtr& msg);
 
-  // Callback method for velocity command
-  // Currently, the only supported commands from this message are 
-  // x and y axis linear velocity, and z axis angular rate 
-  void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
+//   // Callback method for velocity command
+//   // Currently, the only supported commands from this message are 
+//   // x and y axis linear velocity, and z axis angular rate 
+//   void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
 
   // Resets all events if they were true
   void resetEventCommands();

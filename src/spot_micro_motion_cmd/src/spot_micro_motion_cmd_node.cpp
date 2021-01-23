@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
             if (debug_mode) {
                   begin =node->now();
             }
-
+            node->runOnce();
             rclcpp::spin_some(node);
             loop_rate.sleep();
 

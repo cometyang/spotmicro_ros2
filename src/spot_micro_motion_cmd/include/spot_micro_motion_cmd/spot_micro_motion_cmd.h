@@ -1,29 +1,31 @@
-#pragma once //designed to include the current source file only once in a single compilation.
-#ifndef SPOT_MICRO_MOTION_CMD //usd for conditional compiling.
+#pragma once                   // designed to include the current source file only once in a single compilation.
+#ifndef SPOT_MICRO_MOTION_CMD  // usd for conditional compiling.
 #define SPOT_MICRO_MOTION_CMD
-
-#include "rclcpp/rclcpp.hpp"
-#include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
-#include "std_msgs/msg/bool.h"
-#include "std_msgs/msg/string.h"
-#include "geometry_msgs/msg/vector3.h"
-#include "geometry_msgs/msg/twist.h"
-#include "std_msgs/msg/float32_multi_array.h"
-#include "std_msgs/msg/bool.h"
+#include <tf2_ros/transform_broadcaster.h>
+
+#include <string>
+
+#include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
 #include "i2cpwmboard/msg/servo.hpp"
 #include "i2cpwmboard/msg/servo_array.hpp"
 #include "i2cpwmboard/msg/servo_config.hpp"
 #include "i2cpwmboard/msg/servo_config_array.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
+#include "std_msgs/msg/string.hpp"
 // request/response of the servo setup service
-#include "i2cpwmboard/srv/servos_config.hpp"
 #include "command.h"
+#include "i2cpwmboard/srv/servos_config.hpp"
 #include "spot_micro_kinematics/spot_micro_kinematics.h"
 #include "spot_micro_state.h"
 
 // Define a configuration struct
 // To hold configuration parameters from parameter server/config file
-struct SpotMicroNodeConfig {
+struct SpotMicroNodeConfig
+{
   smk::SpotMicroConfig smc;
   float default_stand_height;
   float stand_front_x_offset;
@@ -65,16 +67,16 @@ struct SpotMicroNodeConfig {
   bool publish_odom;
 };
 
-
 /* defining the class */
 
-class SpotMicroMotionCmd: public rclcpp::Node
+class SpotMicroMotionCmd : public rclcpp::Node
 {
- public:
+public:
   // Constructor
   SpotMicroMotionCmd();
-  
-  
+
+  ~SpotMicroMotionCmd();
+
   // Main loop runner, called periodically at the loop rate
   void runOnce();
 
@@ -85,7 +87,7 @@ class SpotMicroMotionCmd: public rclcpp::Node
   void setServoCommandMessageData();
 
   // Publishes a servo proportional command message
-  void publishServoProportionalCommand(); 
+  void publishServoProportionalCommand();
 
   // Publishes a servo absolute command message with all servos set to a command
   // value of 0. This effectively disables the servos (stops them from holding
@@ -107,7 +109,7 @@ class SpotMicroMotionCmd: public rclcpp::Node
   // Returns current state name
   std::string getCurrentStateName();
 
- private:
+private:
   // Declare SpotMicroState a friend so it can access and modify private
   // members of this class
   friend class SpotMicroState;
@@ -116,18 +118,18 @@ class SpotMicroMotionCmd: public rclcpp::Node
   std::unique_ptr<SpotMicroState> state_;
 
   // Command object for encapsulating external commands
-  Command cmd_; // Command object, encapsulate commands
+  Command cmd_;  // Command object, encapsulate commands
 
   // Spot Micro Kinematics object. Holds kinematic state of robot, and holds
   // kinematics operations for setting position/orientation of the robot
-  smk::SpotMicroKinematics sm_; 
+  smk::SpotMicroKinematics sm_;
 
   // Spot Micro Node Config object
   SpotMicroNodeConfig smnc_;
 
   // Holds the body state to be commanded: feet position, body position and
   // angles
-  smk::BodyState body_state_cmd_; 
+  smk::BodyState body_state_cmd_;
 
   // Odometry of the robot position and orientation based on integrated rate
   // commands. Only x and y position, and yaw angle, will be integrated from
@@ -135,10 +137,10 @@ class SpotMicroMotionCmd: public rclcpp::Node
   smk::BodyState robot_odometry_;
 
   // Map to hold servo command values in radians
-  std::map<std::string, float> servo_cmds_rad_ = { {"RF_3", 0.0f}, {"RF_2", 0.0f}, {"RF_1", 0.0f},
-                                                   {"RB_3", 0.0f}, {"RB_2", 0.0f}, {"RB_1", 0.0f},
-                                                   {"LB_3", 0.0f}, {"LB_2", 0.0f}, {"LB_1", 0.0f},
-                                                   {"LF_3", 0.0f}, {"LF_2", 0.0f}, {"LF_1", 0.0f} };
+  std::map<std::string, float> servo_cmds_rad_ = { { "RF_3", 0.0f }, { "RF_2", 0.0f }, { "RF_1", 0.0f },
+                                                   { "RB_3", 0.0f }, { "RB_2", 0.0f }, { "RB_1", 0.0f },
+                                                   { "LB_3", 0.0f }, { "LB_2", 0.0f }, { "LB_1", 0.0f },
+                                                   { "LF_3", 0.0f }, { "LF_2", 0.0f }, { "LF_1", 0.0f } };
 
   // Reads parameters from parameter server to initialize spot micro node config
   // struct
@@ -150,50 +152,48 @@ class SpotMicroMotionCmd: public rclcpp::Node
   // Servo array message for servo absolute command
   i2cpwmboard::msg::ServoArray servo_array_absolute_;
 
-
   // ROS publisher and subscriber handles
-//   ros::NodeHandle nh_; // Defining the ros NodeHandle variable for registrating the same with the master
-//   ros::NodeHandle pnh_; // Private version of node handle
-//   ros::Subscriber stand_sub_; // ros subscriber handle for stand_cmd topic
-//   ros::Subscriber idle_sub_; // ros subscriber handle for idle_cmd topic
-//   ros::Subscriber walk_sub_;
-//   ros::Subscriber vel_cmd_sub_;
-//   ros::Subscriber body_angle_cmd_sub_;
-//   ros::Publisher servos_absolute_pub_;
-//   ros::Publisher servos_proportional_pub_;
-//   ros::Publisher body_state_pub_;
-//   ros::Publisher lcd_vel_cmd_pub_;
-//   ros::Publisher lcd_angle_cmd_pub_;
-//   ros::Publisher lcd_state_pub_;
-//   ros::ServiceClient servos_config_client_;
-//   tf2_ros::TransformBroadcaster transform_br_;
-//   tf2_ros::StaticTransformBroadcaster static_transform_br_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr stand_sub_;  // ros subscriber handle for stand_cmd topic
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr idle_sub_;   // ros subscriber handle for idle_cmd topic
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr walk_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr vel_cmd_sub_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr body_angle_cmd_sub_;
 
-//   // Message for encapsulating robot body state
- // std_msgs::msg::Float32MultiArray body_state_msg_;
+  rclcpp::Publisher<i2cpwmboard::msg::ServoArray>::SharedPtr servos_absolute_pub_;
+  rclcpp::Publisher<i2cpwmboard::msg::ServoArray>::SharedPtr servos_proportional_pub_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr body_state_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr lcd_vel_cmd_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr lcd_angle_cmd_pub_;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr lcd_state_pub_;
+  rclcpp::Client<i2cpwmboard::srv::ServosConfig>::SharedPtr servos_config_client_;
+  tf2_ros::TransformBroadcaster transform_br_;
+  tf2_ros::StaticTransformBroadcaster static_transform_br_;
 
-//   // Messages to hold robot state information for displaying on LCD monitor
-//   // and for any other monitoring purposes.
-//   std_msgs::String lcd_state_string_msg_;
-//   geometry_msgs::Twist lcd_vel_cmd_msg_;
-//   geometry_msgs::Vector3 lcd_angle_cmd_msg_;
+  // Message for encapsulating robot body state
+  std_msgs::msg::Float32MultiArray body_state_msg_;
+
+  // Messages to hold robot state information for displaying on LCD monitor
+  // and for any other monitoring purposes.
+  std_msgs::msg::String lcd_state_string_msg_;
+  geometry_msgs::msg::Twist lcd_vel_cmd_msg_;
+  geometry_msgs::msg::Vector3 lcd_angle_cmd_msg_;
 
   // Callback method for stand command
-  // void standCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
+  void standCommandCallback(const std_msgs::msg::Bool::SharedPtr msg);
 
-  // // Callback method for idle command
-  // void idleCommandCallback(const std_msgs::msg::bool::SharedPtr msg);
+  // Callback method for idle command
+  void idleCommandCallback(const std_msgs::msg::Bool::SharedPtr msg);
 
-//   // Callback method for walk command
-//   void walkCommandCallback(const std_msgs::Bool::ConstPtr& msg);
+  // Callback method for walk command
+  void walkCommandCallback(const std_msgs::msg::Bool::SharedPtr msg);
 
-//   // Callback method for angle command
-//   void angleCommandCallback(const geometry_msgs::Vector3ConstPtr& msg);
+  // Callback method for angle command
+  void angleCommandCallback(const geometry_msgs::msg::Vector3::ConstPtr& msg);
 
   // Callback method for velocity command
-  // Currently, the only supported commands from this message are 
-  // x and y axis linear velocity, and z axis angular rate 
-  // void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
+  // Currently, the only supported commands from this message are
+  // x and y axis linear velocity, and z axis angular rate
+  void velCommandCallback(const geometry_msgs::msg::Twist::ConstPtr& msg);
 
   // Resets all events if they were true
   void resetEventCommands();
@@ -227,6 +227,5 @@ class SpotMicroMotionCmd: public rclcpp::Node
 
   // Calculates the robot odometry coordinate frame
   Eigen::Affine3d getOdometryTransform();
-
 };
-#endif  
+#endif

@@ -21,13 +21,13 @@ Affine3d matrix4fToAffine3d(const Matrix4f& in) {
 // Create a ROS tf2 TransformStamped from a Eigen Affine3d, 
 // parent frame id and child frame id. Stamped with current time, 
 // so should be broadcast ASAP
-msg::TransformStamped eigAndFramesToTrans(
+msg::TransformStamped eigAndFramesToTrans(std::shared_ptr<rclcpp::Node> node,
     const Affine3d& transform, 
     std::string parent_frame_id, std::string child_frame_id) {
 
   msg::TransformStamped transform_stamped = tf2::eigenToTransform(transform);
 
-  //transform_stamped.header.stamp = rclcpp::Time::now();
+  transform_stamped.header.stamp = node->now();
   transform_stamped.header.frame_id = parent_frame_id;
   transform_stamped.child_frame_id = child_frame_id;
 
@@ -38,16 +38,16 @@ msg::TransformStamped eigAndFramesToTrans(
 // Create a transform from a translation, rotation, and parent and 
 // child frame IDs. Will stamp the transform with ros::Time::now(),
 // so the returned transform should be broadcast asap
-  msg::TransformStamped createTransform(
+  msg::TransformStamped createTransform(std::shared_ptr<rclcpp::Node> node,
       std::string parent_frame_id, std::string child_frame_id,
       double x, double y, double z, 
       double roll, double pitch, double yaw) {
 
   msg::TransformStamped tr_stamped;
 
-  ///TODO: port ros::Time::now to ros2 
   
-  //tr_stamped.header.stamp = ros::Time::now();
+  
+  tr_stamped.header.stamp = node->now();
   tr_stamped.header.frame_id = parent_frame_id;
   tr_stamped.child_frame_id = child_frame_id;
 

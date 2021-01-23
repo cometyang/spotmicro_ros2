@@ -541,15 +541,15 @@ void SpotMicroMotionCmd::publishStaticTransforms()
   msg::TransformStamped tr_stamped;
 
   // base_link to front_link transform
-  tr_stamped = createTransform("base_link", "front_link", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  tr_stamped = createTransform(shared_from_this(),"base_link", "front_link", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   static_transform_br_.sendTransform(tr_stamped);
 
   // base_link to rear_link transform
-  tr_stamped = createTransform("base_link", "rear_link", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  tr_stamped = createTransform(shared_from_this(),"base_link", "rear_link", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   static_transform_br_.sendTransform(tr_stamped);
 
   // base_link to lidar_link transform
-  tr_stamped = createTransform("base_link", "lidar_link", 0.0, 0.0, 0.035,  // TODO: Change to a parameter
+  tr_stamped = createTransform(shared_from_this(),"base_link", "lidar_link", 0.0, 0.0, 0.035,  // TODO: Change to a parameter
                                0.0, 0.0, 0.0);
   static_transform_br_.sendTransform(tr_stamped);
 
@@ -562,7 +562,7 @@ void SpotMicroMotionCmd::publishStaticTransforms()
   // Loop over all leg to leg cover name pairs, publish a 0 dist/rot transform
   for (auto it = leg_cover_pairs.begin(); it != leg_cover_pairs.end(); it++)
   {
-    tr_stamped = createTransform(it->first, it->second, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    tr_stamped = createTransform(shared_from_this(),it->first, it->second, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     static_transform_br_.sendTransform(tr_stamped);
   }
 
@@ -575,7 +575,7 @@ void SpotMicroMotionCmd::publishStaticTransforms()
   // Loop over all name pairs, publish the same transform
   for (auto it = foot_toe_pairs.begin(); it != foot_toe_pairs.end(); it++)
   {
-    tr_stamped = createTransform(it->first, it->second, 0.0, 0.0, -0.13,  // TODO: Change to a parameter
+    tr_stamped = createTransform(shared_from_this(),it->first, it->second, 0.0, 0.0, -0.13,  // TODO: Change to a parameter
                                  0.0, 0.0, 0.0);
     static_transform_br_.sendTransform(tr_stamped);
   }
@@ -595,7 +595,7 @@ void SpotMicroMotionCmd::publishDynamicTransforms()
   /////////////////
   if (smnc_.publish_odom)
   {
-    transform_stamped = eigAndFramesToTrans(getOdometryTransform(), "odom", "base_footprint");
+    transform_stamped = eigAndFramesToTrans(shared_from_this(),getOdometryTransform(), "odom", "base_footprint");
     transform_br_.sendTransform(transform_stamped);
   }
 
@@ -613,24 +613,24 @@ void SpotMicroMotionCmd::publishDynamicTransforms()
   temp_trans = AngleAxisd(M_PI / 2.0, Vector3d::UnitX()) * temp_trans * AngleAxisd(-M_PI / 2.0, Vector3d::UnitX());
 
   // Create and broadcast the transform
-  transform_stamped = eigAndFramesToTrans(temp_trans, "base_footprint", "base_link");
+  transform_stamped = eigAndFramesToTrans(shared_from_this(),temp_trans, "base_footprint", "base_link");
   transform_br_.sendTransform(transform_stamped);
 
   /////////////////////
   // FRONT RIGHT LEG //
   /////////////////////
   // Shoulder
-  transform_stamped = createTransform("base_link", "front_right_shoulder_link", smnc_.smc.body_length / 2.0,
+  transform_stamped = createTransform(shared_from_this(),"base_link", "front_right_shoulder_link", smnc_.smc.body_length / 2.0,
                                       -smnc_.smc.body_width / 2.0, 0.0, joint_angs.right_front.ang1, 0.0, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // leg
-  transform_stamped = createTransform("front_right_shoulder_link", "front_right_leg_link", 0.0,
+  transform_stamped = createTransform(shared_from_this(),"front_right_shoulder_link", "front_right_leg_link", 0.0,
                                       -smnc_.smc.hip_link_length, 0.0, 0.0, -joint_angs.right_front.ang2, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // foot
-  transform_stamped = createTransform("front_right_leg_link", "front_right_foot_link", 0.0, 0.0,
+  transform_stamped = createTransform(shared_from_this(),"front_right_leg_link", "front_right_foot_link", 0.0, 0.0,
                                       -smnc_.smc.upper_leg_link_length, 0.0, -joint_angs.right_front.ang3, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
@@ -638,17 +638,17 @@ void SpotMicroMotionCmd::publishDynamicTransforms()
   // REAR RIGHT LEG //
   ////////////////////
   // shoulder
-  transform_stamped = createTransform("base_link", "rear_right_shoulder_link", -smnc_.smc.body_length / 2.0,
+  transform_stamped = createTransform(shared_from_this(),"base_link", "rear_right_shoulder_link", -smnc_.smc.body_length / 2.0,
                                       -smnc_.smc.body_width / 2.0, 0.0, joint_angs.right_back.ang1, 0.0, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // leg
-  transform_stamped = createTransform("rear_right_shoulder_link", "rear_right_leg_link", 0.0,
+  transform_stamped = createTransform(shared_from_this(),"rear_right_shoulder_link", "rear_right_leg_link", 0.0,
                                       -smnc_.smc.hip_link_length, 0.0, 0.0, -joint_angs.right_back.ang2, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // foot
-  transform_stamped = createTransform("rear_right_leg_link", "rear_right_foot_link", 0.0, 0.0,
+  transform_stamped = createTransform(shared_from_this(),"rear_right_leg_link", "rear_right_foot_link", 0.0, 0.0,
                                       -smnc_.smc.upper_leg_link_length, 0.0, -joint_angs.right_back.ang3, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
@@ -656,17 +656,17 @@ void SpotMicroMotionCmd::publishDynamicTransforms()
   // FRONT LEFT LEG //
   ////////////////////
   // Shoulder
-  transform_stamped = createTransform("base_link", "front_left_shoulder_link", smnc_.smc.body_length / 2.0,
+  transform_stamped = createTransform(shared_from_this(),"base_link", "front_left_shoulder_link", smnc_.smc.body_length / 2.0,
                                       smnc_.smc.body_width / 2.0, 0.0, -joint_angs.left_front.ang1, 0.0, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // leg
-  transform_stamped = createTransform("front_left_shoulder_link", "front_left_leg_link", 0.0, smnc_.smc.hip_link_length,
+  transform_stamped = createTransform(shared_from_this(),"front_left_shoulder_link", "front_left_leg_link", 0.0, smnc_.smc.hip_link_length,
                                       0.0, 0.0, joint_angs.left_front.ang2, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // foot
-  transform_stamped = createTransform("front_left_leg_link", "front_left_foot_link", 0.0, 0.0,
+  transform_stamped = createTransform(shared_from_this(),"front_left_leg_link", "front_left_foot_link", 0.0, 0.0,
                                       -smnc_.smc.upper_leg_link_length, 0.0, joint_angs.left_front.ang3, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
@@ -674,17 +674,17 @@ void SpotMicroMotionCmd::publishDynamicTransforms()
   // REAR LEFT LEG //
   ///////////////////
   // shoulder
-  transform_stamped = createTransform("base_link", "rear_left_shoulder_link", -smnc_.smc.body_length / 2.0,
+  transform_stamped = createTransform(shared_from_this(),"base_link", "rear_left_shoulder_link", -smnc_.smc.body_length / 2.0,
                                       smnc_.smc.body_width / 2.0, 0.0, -joint_angs.left_back.ang1, 0.0, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // leg
-  transform_stamped = createTransform("rear_left_shoulder_link", "rear_left_leg_link", 0.0, smnc_.smc.hip_link_length,
+  transform_stamped = createTransform(shared_from_this(),"rear_left_shoulder_link", "rear_left_leg_link", 0.0, smnc_.smc.hip_link_length,
                                       0.0, 0.0, joint_angs.left_back.ang2, 0.0);
   transform_br_.sendTransform(transform_stamped);
 
   // foot
-  transform_stamped = createTransform("rear_left_leg_link", "rear_left_foot_link", 0.0, 0.0,
+  transform_stamped = createTransform(shared_from_this(),"rear_left_leg_link", "rear_left_foot_link", 0.0, 0.0,
                                       -smnc_.smc.upper_leg_link_length, 0.0, joint_angs.left_back.ang3, 0.0);
   transform_br_.sendTransform(transform_stamped);
 }

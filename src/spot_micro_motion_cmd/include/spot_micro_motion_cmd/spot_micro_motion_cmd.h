@@ -153,11 +153,11 @@ private:
   i2cpwmboard::msg::ServoArray servo_array_absolute_;
 
   // ROS publisher and subscriber handles
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr stand_sub_;  // ros subscriber handle for stand_cmd topic
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr idle_sub_;   // ros subscriber handle for idle_cmd topic
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr walk_sub_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr vel_cmd_sub_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr body_angle_cmd_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stand_sub_;  // ros subscriber handle for stand_cmd topic
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr idle_sub_;   // ros subscriber handle for idle_cmd topic
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr walk_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_cmd_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Vector3>::SharedPtr body_angle_cmd_sub_;
 
   rclcpp::Publisher<i2cpwmboard::msg::ServoArray>::SharedPtr servos_absolute_pub_;
   rclcpp::Publisher<i2cpwmboard::msg::ServoArray>::SharedPtr servos_proportional_pub_;
@@ -188,12 +188,12 @@ private:
   void walkCommandCallback(const std_msgs::msg::Bool::SharedPtr msg);
 
   // Callback method for angle command
-  void angleCommandCallback(const geometry_msgs::msg::Vector3::ConstPtr& msg);
+  void angleCommandCallback(const geometry_msgs::msg::Vector3::SharedPtr msg);
 
   // Callback method for velocity command
   // Currently, the only supported commands from this message are
   // x and y axis linear velocity, and z axis angular rate
-  void velCommandCallback(const geometry_msgs::msg::Twist::ConstPtr& msg);
+  void velCommandCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
 
   // Resets all events if they were true
   void resetEventCommands();

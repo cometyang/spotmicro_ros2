@@ -85,6 +85,10 @@ ${tf2_msgs_LIBRARIES}
 
 ament_target_dependencies(${PROJECT_NAME}_node rclcpp std_msgs geometry_msgs tf2_ros i2cpwmboard)
 
+install(TARGETS
+   ${PROJECT_NAME}_node
+   DESTINATION lib/${PROJECT_NAME})
+
 # install the launch directory
 install(DIRECTORY
   launch

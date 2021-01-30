@@ -3,6 +3,7 @@ from launch.substitutions import EnvironmentVariable
 import os
 import launch_ros.actions
 import pathlib
+from launch_ros.actions import Node
 
 parameters_file_name = 'spot_micro_motion_cmd.yaml'
 
@@ -14,12 +15,13 @@ def generate_launch_description():
         Node(
             package='i2cpwmboard',
             executable='i2cpwm_board',
-            name='i2cpwmboard'
+            name='i2cpwmboard',
+            parameters = ['--ros-args --log-level debug']
         ),
         Node(
             package='spot_micro_motion_cmd',
             executable='spot_micro_motion_cmd_node',
-            name="spot_micro_motion_cmd"
+            name="spot_micro_motion_cmd",
             output='screen',
             parameters=[
                 parameters_file_path

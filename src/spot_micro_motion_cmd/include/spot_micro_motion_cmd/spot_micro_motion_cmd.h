@@ -108,7 +108,10 @@ public:
 
   // Returns current state name
   std::string getCurrentStateName();
-
+  // Broadcast static tf2 coordinate frame transformation to /tf_static
+  // Should only be called once at initalization, as it's only for static
+  // transformations of the robot model that do not change over time
+  void publishStaticTransforms();
 private:
   // Declare SpotMicroState a friend so it can access and modify private
   // members of this class
@@ -211,10 +214,7 @@ private:
   // Publish LCD monitor messages
   void publishLcdMonitorData();
 
-  // Broadcast static tf2 coordinate frame transformation to /tf_static
-  // Should only be called once at initalization, as it's only for static
-  // transformations of the robot model that do not change over time
-  void publishStaticTransforms();
+
 
   // Broadcast dynamic tf2 coordinate frame transformations to /tf
   // Will broadcast dynamic robot and leg joint transformations

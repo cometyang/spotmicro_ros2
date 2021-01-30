@@ -39,10 +39,10 @@ SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transfo
 
   // Initialize state to Idle state
   state_ = std::make_unique<SpotMicroIdleState>();
-
+  RCLCPP_INFO(get_logger(), "Before reading parameters"); 
   // Read in config parameters into smnc_
   readInConfigParameters();
-
+  RCLCPP_INFO(get_logger(), "Finished reading initializaton");
   // Initialize spot micro kinematics object of this class
   sm_ = smk::SpotMicroKinematics(0.0f, 0.0f, 0.0f, smnc_.smc);
 
@@ -51,6 +51,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transfo
   body_state_cmd_.xyz_pos = { .x = 0.0f, .y = smnc_.lie_down_height, .z = 0.0f };
   body_state_cmd_.leg_feet_pos = getLieDownStance();
 
+  RCLCPP_INFO(get_logger(), "Set the spot micro kinematics object to inital command");
   // Set the spot micro kinematics object to this initial command
   sm_.setBodyState(body_state_cmd_);
 
@@ -58,6 +59,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transfo
   robot_odometry_.euler_angs = { .phi = 0.0f, .theta = 0.0f, .psi = 0.0f };
   robot_odometry_.xyz_pos = { .x = 0.0f, .y = 0.0f, .z = 0.0f };
 
+  RCLCPP_INFO(get_logger(), "Initialize servo array message");
   // Initialize servo array message with 12 servo objects
   for (int i = 1; i <= smnc_.num_servos; i++)
   {
@@ -127,6 +129,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transfo
   lcd_angle_cmd_msg_.y = 0.0f;
   lcd_angle_cmd_msg_.z = 0.0f;
 
+
   // Only do if plot mode
   // Initialize body state message for plot debug only
   // Initialize 18 values to hold xyz positions of the four legs (12) +
@@ -139,8 +142,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transfo
     }
   }
 
-  // Publish static transforms
-  publishStaticTransforms();
 }
 
 // Destructor method
@@ -201,6 +202,7 @@ bool SpotMicroMotionCmd::publishServoConfiguration()
     temp_servo_config.servo = servo_config_params["num"];
     temp_servo_config.direction = servo_config_params["direction"];
     request->servos.push_back(temp_servo_config);
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "sevo num:  [%ld]", temp_servo_config.servo);
   }
 
     while (!servos_config_client_->wait_for_service(1s)) {
@@ -422,6 +424,12 @@ void SpotMicroMotionCmd::readInConfigParameters()
     std::string servo_name = iter->first;  // Get key, string of the servo name
 
     get_parameters(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
+
+    RCLCPP_INFO(get_logger(), "Trying to load parameters for servo_name %s\n", servo_name.c_str());
+    for(auto it = temp_map.begin(); it!=temp_map.end(); ++it)
+    {
+      RCLCPP_INFO(get_logger(), "map key:%s, value: %f", it->first, it->second);
+    }
     smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
   }
 }
@@ -545,7 +553,7 @@ void SpotMicroMotionCmd::publishLcdMonitorData()
 void SpotMicroMotionCmd::publishStaticTransforms()
 {
   msg::TransformStamped tr_stamped;
-
+  RCLCPP_INFO(get_logger(), "Enter publishStatic Transforms");
   // base_link to front_link transform
   tr_stamped = createTransform(shared_from_this(),"base_link", "front_link", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
   static_transform_br_.sendTransform(tr_stamped);
@@ -572,6 +580,7 @@ void SpotMicroMotionCmd::publishStaticTransforms()
     static_transform_br_.sendTransform(tr_stamped);
   }
 
+  RCLCPP_INFO(get_logger(), "publish the transform");
   // foot to toe link transforms
   const VectorStringPairs foot_toe_pairs{ { "front_left_foot_link", "front_left_toe_link" },
                                           { "front_right_foot_link", "front_right_toe_link" },

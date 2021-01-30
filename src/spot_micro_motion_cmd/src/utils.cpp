@@ -46,7 +46,7 @@ msg::TransformStamped eigAndFramesToTrans(std::shared_ptr<rclcpp::Node> node,
   msg::TransformStamped tr_stamped;
 
   
-  
+
   tr_stamped.header.stamp = node->now();
   tr_stamped.header.frame_id = parent_frame_id;
   tr_stamped.child_frame_id = child_frame_id;

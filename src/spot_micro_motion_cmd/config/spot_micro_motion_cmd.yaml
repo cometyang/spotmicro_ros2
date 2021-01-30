@@ -22,7 +22,7 @@ spot_micro_motion_cmd:
     # Servo parameters
     num_servos: 12
     servo_max_angle_deg: 82.5
-    RF_3: { num: 6, center: 306, range: 403, direction: 1, center_angle_deg: 32.7 }
+    RF_3: { num: 6.0, center: 306.0, range: 403.0, direction: 1.0, center_angle_deg: 32.7 }
     RF_2: { num: 5, center: 306, range: 385, direction: 1, center_angle_deg: -17.1 }
     RF_1: { num: 4, center: 306, range: 403, direction: -1, center_angle_deg: 0.0 }
     RB_3: { num: 9, center: 306, range: 385, direction: 1, center_angle_deg: 102.9 }

@@ -10,17 +10,21 @@ int main(int argc, char** argv) {
   rclcpp::init(argc, argv);
 
   auto node = std::make_shared<SpotMicroMotionCmd>();
- 
+   RCLCPP_INFO(node->get_logger(), "Publish static transforms");
+  // Publish static transforms
+  node->publishStaticTransforms();
+  RCLCPP_INFO(node->get_logger(), "Finish node initialization");
     float duration = node->getNodeConfig().dt;
     float rate = 1.0/duration;
    
     
     rclcpp::Rate loop_rate(rate);
 
-
+    std::cout<<"1************************";
     if (node->publishServoConfiguration()) {
         bool debug_mode = node->getNodeConfig().debug_mode;
         rclcpp::Time begin;
+        std::cout<<"2************************";
         while(rclcpp::ok()){
 
             

@@ -345,43 +345,49 @@ void SpotMicroMotionCmd::readInConfigParameters()
   // Use private node handle for getting params so just the relative
   // parameter name can be used (as opposed to the global name, e.g.:
   // /spot_micro_motion_cmd/param1
-  // get_parameter("hip_link_length", smnc_.smc.hip_link_length);
-  // get_parameter("upper_leg_link_length", smnc_.smc.upper_leg_link_length);
-  // get_parameter("lower_leg_link_length", smnc_.smc.lower_leg_link_length);
-  // get_parameter("body_width", smnc_.smc.body_width);
-  // get_parameter("body_length", smnc_.smc.body_length);
-  // get_parameter("default_stand_height", smnc_.default_stand_height);
-  // get_parameter("stand_front_x_offset", smnc_.stand_front_x_offset);
-  // get_parameter("stand_back_x_offset", smnc_.stand_back_x_offset);
-  // get_parameter("lie_down_height", smnc_.lie_down_height);
-  // get_parameter("lie_down_foot_x_offset", smnc_.lie_down_feet_x_offset);
-  // get_parameter("num_servos", smnc_.num_servos);
-  // get_parameter("servo_max_angle_deg", smnc_.servo_max_angle_deg);
-  // get_parameter("transit_tau", smnc_.transit_tau);
-  // get_parameter("transit_rl", smnc_.transit_rl);
-  // get_parameter("transit_angle_rl", smnc_.transit_angle_rl);
-  // get_parameter("dt", smnc_.dt);
-  // get_parameter("debug_mode", smnc_.debug_mode);
-  // get_parameter("plot_mode", smnc_.plot_mode);
-  // get_parameter("max_fwd_velocity", smnc_.max_fwd_velocity);
-  // get_parameter("max_side_velocity", smnc_.max_side_velocity);
-  // get_parameter("max_yaw_rate", smnc_.max_yaw_rate);
-  // get_parameter("z_clearance", smnc_.z_clearance);
-  // get_parameter("alpha", smnc_.alpha);
-  // get_parameter("beta", smnc_.beta);
-  // get_parameter("num_phases", smnc_.num_phases);
-  // get_parameter("rb_contact_phases", smnc_.rb_contact_phases);
-  // get_parameter("rf_contact_phases", smnc_.rf_contact_phases);
-  // get_parameter("lf_contact_phases", smnc_.lf_contact_phases);
-  // get_parameter("lb_contact_phases", smnc_.lb_contact_phases);
-  // get_parameter("overlap_time", smnc_.overlap_time);
-  // get_parameter("swing_time", smnc_.swing_time);
-  // get_parameter("foot_height_time_constant", smnc_.foot_height_time_constant);
-  // get_parameter("body_shift_phases", smnc_.body_shift_phases);
-  // get_parameter("fwd_body_balance_shift", smnc_.fwd_body_balance_shift);
-  // get_parameter("back_body_balance_shift", smnc_.back_body_balance_shift);
-  // get_parameter("side_body_balance_shift", smnc_.side_body_balance_shift);
-  // get_parameter("publish_odom", smnc_.publish_odom);
+  get_parameter("hip_link_length", smnc_.smc.hip_link_length);
+  get_parameter("upper_leg_link_length", smnc_.smc.upper_leg_link_length);
+  get_parameter("lower_leg_link_length", smnc_.smc.lower_leg_link_length);
+  get_parameter("body_width", smnc_.smc.body_width);
+  get_parameter("body_length", smnc_.smc.body_length);
+  get_parameter("default_stand_height", smnc_.default_stand_height);
+  get_parameter("stand_front_x_offset", smnc_.stand_front_x_offset);
+  get_parameter("stand_back_x_offset", smnc_.stand_back_x_offset);
+  get_parameter("lie_down_height", smnc_.lie_down_height);
+  get_parameter("lie_down_foot_x_offset", smnc_.lie_down_feet_x_offset);
+  get_parameter("num_servos", smnc_.num_servos);
+  get_parameter("servo_max_angle_deg", smnc_.servo_max_angle_deg);
+  get_parameter("transit_tau", smnc_.transit_tau);
+  get_parameter("transit_rl", smnc_.transit_rl);
+  get_parameter("transit_angle_rl", smnc_.transit_angle_rl);
+  get_parameter("dt", smnc_.dt);
+  get_parameter("debug_mode", smnc_.debug_mode);
+  get_parameter("plot_mode", smnc_.plot_mode);
+  get_parameter("max_fwd_velocity", smnc_.max_fwd_velocity);
+  get_parameter("max_side_velocity", smnc_.max_side_velocity);
+  get_parameter("max_yaw_rate", smnc_.max_yaw_rate);
+  get_parameter("z_clearance", smnc_.z_clearance);
+  get_parameter("alpha", smnc_.alpha);
+  get_parameter("beta", smnc_.beta);
+  get_parameter("num_phases", smnc_.num_phases);
+  std::vector<long> rb_phases=get_parameter("rb_contact_phases").as_integer_array();
+  std::vector<long> rf_phases=get_parameter("rf_contact_phases").as_integer_array();
+  std::vector<long> lf_phases=get_parameter("lf_contact_phases").as_integer_array();
+  std::vector<long> lb_phases=get_parameter("lb_contact_phases").as_integer_array();
+  smnc_.rb_contact_phases = std::vector<int>(rb_phases.begin(), rb_phases.end());
+  smnc_.rf_contact_phases = std::vector<int>(rf_phases.begin(), rf_phases.end());
+  smnc_.lf_contact_phases = std::vector<int>(lf_phases.begin(), lf_phases.end());
+  smnc_.lb_contact_phases = std::vector<int>(lb_phases.begin(), lb_phases.end());
+  get_parameter("overlap_time", smnc_.overlap_time);
+  get_parameter("swing_time", smnc_.swing_time);
+  get_parameter("foot_height_time_constant", smnc_.foot_height_time_constant);
+
+  std::vector<long> phases=get_parameter("body_shift_phases").as_integer_array();
+  smnc_.body_shift_phases= std::vector<int>(phases.begin(), phases.end());
+  get_parameter("fwd_body_balance_shift", smnc_.fwd_body_balance_shift);
+  get_parameter("back_body_balance_shift", smnc_.back_body_balance_shift);
+  get_parameter("side_body_balance_shift", smnc_.side_body_balance_shift);
+  get_parameter("publish_odom", smnc_.publish_odom);
 
   // Derived parameters, round result of division of floats
   smnc_.overlap_ticks = round(smnc_.overlap_time / smnc_.dt);
@@ -415,7 +421,7 @@ void SpotMicroMotionCmd::readInConfigParameters()
   {
     std::string servo_name = iter->first;  // Get key, string of the servo name
 
-    // get_parameter(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
+    get_parameters(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
     smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
   }
 }

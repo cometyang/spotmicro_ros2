@@ -458,7 +458,7 @@ void SpotMicroMotionCmd::readInConfigParameters()
   }
 
   // Temporary map for populating map in smnc_
-  std::map<std::string, double> temp_map;
+  std::map<std::string, float> temp_map;
   std::map<std::string, double> default_servo_map{
      {"num",  6.0},
      {"center", 306.0},

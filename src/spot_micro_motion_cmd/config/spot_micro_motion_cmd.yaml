@@ -1,4 +1,4 @@
-spot_micro_motion_cmd:
+spot_micro_motion_cmd_node:
   ros__parameters:
     # Configuration parameters
 
@@ -22,20 +22,46 @@ spot_micro_motion_cmd:
     # Servo parameters
     num_servos: 12
     servo_max_angle_deg: 82.5
-    RF_3: { num: 6.0, center: 306.0, range: 403.0, direction: 1.0, center_angle_deg: 32.7 }
-    RF_2: { num: 5, center: 306, range: 385, direction: 1, center_angle_deg: -17.1 }
-    RF_1: { num: 4, center: 306, range: 403, direction: -1, center_angle_deg: 0.0 }
-    RB_3: { num: 9, center: 306, range: 385, direction: 1, center_angle_deg: 102.9 }
-    RB_2: { num: 8, center: 306, range: 383, direction: 1, center_angle_deg: -25.4 }
-    RB_1: { num: 7, center: 306, range: 403, direction: -1, center_angle_deg: 20.4 }
+    RF_3:
+      num: 6.0
+      center: 306.0
+      range: 403.0
+      direction: 1.0
+      center_angle_deg: 32.7
+    RF_2:
+      { num: 5.0, center: 306.0, range: 385.0, direction: 1.0, center_angle_deg: -17.1 }
+    RF_1:
+      { num: 4.0, center: 306.0, range: 403.0, direction: -1.0, center_angle_deg: 0.0 }
+    RB_3:
+      { num: 9.0, center: 306.0, range: 385.0, direction: 1.0, center_angle_deg: 102.9 }
+    RB_2:
+      { num: 8.0, center: 306.0, range: 383.0, direction: 1.0, center_angle_deg: -25.4 }
+    RB_1:
+      { num: 7.0, center: 306.0, range: 403.0, direction: -1.0, center_angle_deg: 20.4 }
     LB_3:
-      { num: 12, center: 306, range: 383, direction: 1, center_angle_deg: -83.5 }
-    LB_2: { num: 11, center: 306, range: 403, direction: 1, center_angle_deg: 65.5 }
+      {
+        num: 12.0,
+        center: 306.0,
+        range: 383.0,
+        direction: 1.0,
+        center_angle_deg: -83.5,
+      }
+    LB_2:
+      { num: 11.0, center: 306.0, range: 403.0, direction: 1.0, center_angle_deg: 65.5 }
     LB_1:
-      { num: 10, center: 306, range: 403, direction: 1, center_angle_deg: -24.6 }
-    LF_3: { num: 3, center: 306, range: 403, direction: 1, center_angle_deg: -90.8 }
-    LF_2: { num: 2, center: 306, range: 380, direction: 1, center_angle_deg: -35.1 }
-    LF_1: { num: 1, center: 306, range: 403, direction: 1, center_angle_deg: -8.2 }
+      {
+        num: 10.0,
+        center: 306.0,
+        range: 403.0,
+        direction: 1.0,
+        center_angle_deg: -24.6,
+      }
+    LF_3:
+      { num: 3.0, center: 306.0, range: 403.0, direction: 1.0, center_angle_deg: -90.8 }
+    LF_2:
+      { num: 2.0, center: 306.0, range: 380.0, direction: 1.0, center_angle_deg: -35.1 }
+    LF_1:
+      { num: 1.0, center: 306.0, range: 403.0, direction: 1.0, center_angle_deg: -8.2 }
 
     # Control Parameters
     transit_tau: 0.3 # Time constant in seconds for first order filters during transition state

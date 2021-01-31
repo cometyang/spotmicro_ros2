@@ -6,8 +6,9 @@
   <description>TODO: Package description</description>
   <maintainer email="cometyang@gmail.com">yang</maintainer>
   <license>TODO: License declaration</license>
-
+  <exec_depend>rclpy</exec_depend>
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

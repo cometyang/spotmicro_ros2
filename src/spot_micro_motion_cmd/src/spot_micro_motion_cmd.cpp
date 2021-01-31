@@ -27,7 +27,7 @@ using namespace std::chrono_literals;
 typedef std::vector<std::pair<std::string, std::string>> VectorStringPairs;
 
 // // Constructor
-SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spotmicro_motion_cmd"), transform_br_(this), static_transform_br_(this)
+SpotMicroMotionCmd::SpotMicroMotionCmd() : Node("spot_micro_motion_cmd_node"), transform_br_(this), static_transform_br_(this)
 {
   if (smnc_.debug_mode)
   {
@@ -347,49 +347,92 @@ void SpotMicroMotionCmd::readInConfigParameters()
   // Use private node handle for getting params so just the relative
   // parameter name can be used (as opposed to the global name, e.g.:
   // /spot_micro_motion_cmd/param1
+  this->declare_parameter("hip_link_length");
   get_parameter("hip_link_length", smnc_.smc.hip_link_length);
+  //RCLCPP_INFO(get_logger(), "hip_link_length: %f", smnc_.smc.hip_link_length);
+  this->declare_parameter("upper_leg_link_length");
   get_parameter("upper_leg_link_length", smnc_.smc.upper_leg_link_length);
+  this->declare_parameter("lower_leg_link_length");
   get_parameter("lower_leg_link_length", smnc_.smc.lower_leg_link_length);
+  this->declare_parameter("body_width");
   get_parameter("body_width", smnc_.smc.body_width);
+  this->declare_parameter("body_length");
   get_parameter("body_length", smnc_.smc.body_length);
+  this->declare_parameter("default_stand_height");
   get_parameter("default_stand_height", smnc_.default_stand_height);
+  this->declare_parameter("stand_front_x_offset");
   get_parameter("stand_front_x_offset", smnc_.stand_front_x_offset);
+  this->declare_parameter("stand_back_x_offset");
   get_parameter("stand_back_x_offset", smnc_.stand_back_x_offset);
+  this->declare_parameter("lie_down_height");
   get_parameter("lie_down_height", smnc_.lie_down_height);
+  this->declare_parameter("lie_down_foot_x_offset");
   get_parameter("lie_down_foot_x_offset", smnc_.lie_down_feet_x_offset);
+  this->declare_parameter("num_servos");
   get_parameter("num_servos", smnc_.num_servos);
+  this->declare_parameter("servo_max_angle_deg");
   get_parameter("servo_max_angle_deg", smnc_.servo_max_angle_deg);
+  this->declare_parameter("transit_tau");
   get_parameter("transit_tau", smnc_.transit_tau);
+  this->declare_parameter("transit_rl");
   get_parameter("transit_rl", smnc_.transit_rl);
+  this->declare_parameter("transit_angle_rl");
   get_parameter("transit_angle_rl", smnc_.transit_angle_rl);
+  this->declare_parameter("dt");
   get_parameter("dt", smnc_.dt);
+  this->declare_parameter("debug_mode");
   get_parameter("debug_mode", smnc_.debug_mode);
+  this->declare_parameter("plot_mode");
   get_parameter("plot_mode", smnc_.plot_mode);
+  this->declare_parameter("max_fwd_velocity");
   get_parameter("max_fwd_velocity", smnc_.max_fwd_velocity);
+  this->declare_parameter("max_side_velocity");
   get_parameter("max_side_velocity", smnc_.max_side_velocity);
+  this->declare_parameter("max_yaw_rate");
   get_parameter("max_yaw_rate", smnc_.max_yaw_rate);
+  this->declare_parameter("z_clearance");
   get_parameter("z_clearance", smnc_.z_clearance);
+  this->declare_parameter("alpha");
   get_parameter("alpha", smnc_.alpha);
+  this->declare_parameter("beta");
   get_parameter("beta", smnc_.beta);
+  this->declare_parameter("num_phases");
   get_parameter("num_phases", smnc_.num_phases);
-//   std::vector<long> rb_phases=get_parameter("rb_contact_phases").as_integer_array();
-//   std::vector<long> rf_phases=get_parameter("rf_contact_phases").as_integer_array();
-//   std::vector<long> lf_phases=get_parameter("lf_contact_phases").as_integer_array();
-//   std::vector<long> lb_phases=get_parameter("lb_contact_phases").as_integer_array();
-  smnc_.rb_contact_phases = {1, 0, 1, 1, 1, 1, 1, 1}; // std::vector<int>(rb_phases.begin(), rb_phases.end());
-  smnc_.rf_contact_phases = {1, 1, 1, 0, 1, 1, 1, 1}; // std::vector<int>(rf_phases.begin(), rf_phases.end());
-  smnc_.lf_contact_phases = {1, 1, 1, 1, 1, 1, 1, 0};  //std::vector<int>(lf_phases.begin(), lf_phases.end());
-  smnc_.lb_contact_phases = {1, 1, 1, 1, 1, 0, 1, 1}; //std::vector<int>(lb_phases.begin(), lb_phases.end());
+  this->declare_parameter("rb_contact_phases");
+  this->declare_parameter("rf_contact_phases");
+  this->declare_parameter("lf_contact_phases");
+  this->declare_parameter("lb_contact_phases");
+  std::vector<long> rb_phases=get_parameter("rb_contact_phases").as_integer_array();
+  std::vector<long> rf_phases=get_parameter("rf_contact_phases").as_integer_array();
+  std::vector<long> lf_phases=get_parameter("lf_contact_phases").as_integer_array();
+  std::vector<long> lb_phases=get_parameter("lb_contact_phases").as_integer_array();
+
+  smnc_.rb_contact_phases = std::vector<int>(rb_phases.begin(), rb_phases.end());
+  smnc_.rf_contact_phases = std::vector<int>(rf_phases.begin(), rf_phases.end());
+  smnc_.lf_contact_phases = std::vector<int>(lf_phases.begin(), lf_phases.end());
+  smnc_.lb_contact_phases = std::vector<int>(lb_phases.begin(), lb_phases.end());
+
+  this->declare_parameter("overlap_time");
   get_parameter("overlap_time", smnc_.overlap_time);
+  this->declare_parameter("swing_time");
   get_parameter("swing_time", smnc_.swing_time);
+  this->declare_parameter("foot_height_time_constant");
   get_parameter("foot_height_time_constant", smnc_.foot_height_time_constant);
 
-//   std::vector<long> phases=get_parameter("body_shift_phases").as_integer_array();
-  smnc_.body_shift_phases= {1,2,3,4,5,6,7,8}; //std::vector<int>(phases.begin(), phases.end());
+  this->declare_parameter("body_shift_phases");
+  std::vector<long> phases=get_parameter("body_shift_phases").as_integer_array();
+  smnc_.body_shift_phases= std::vector<int>(phases.begin(), phases.end());
+
+  this->declare_parameter("fwd_body_balance_shift");
   get_parameter("fwd_body_balance_shift", smnc_.fwd_body_balance_shift);
+  this->declare_parameter("back_body_balance_shift");
   get_parameter("back_body_balance_shift", smnc_.back_body_balance_shift);
+  this->declare_parameter("side_body_balance_shift");
   get_parameter("side_body_balance_shift", smnc_.side_body_balance_shift);
+  this->declare_parameter("publish_odom");
   get_parameter("publish_odom", smnc_.publish_odom);
+
+
 
   // Derived parameters, round result of division of floats
   smnc_.overlap_ticks = round(smnc_.overlap_time / smnc_.dt);
@@ -415,22 +458,32 @@ void SpotMicroMotionCmd::readInConfigParameters()
   }
 
   // Temporary map for populating map in smnc_
-  std::map<std::string, float> temp_map;
-
+  std::map<std::string, double> temp_map;
+  std::map<std::string, double> default_servo_map{
+     {"num",  6.0},
+     {"center", 306.0},
+     {"range", 403.0},
+     {"direction", 1.0},
+     {"center_angle_deg", 32.7},
+  };
   // Iterate over servo names, as defined in the map servo_cmds_rad, to populate
   // the servo config map in smnc_
   for (std::map<std::string, float>::iterator iter = servo_cmds_rad_.begin(); iter != servo_cmds_rad_.end(); ++iter)
   {
     std::string servo_name = iter->first;  // Get key, string of the servo name
+    this->declare_parameters(servo_name, default_servo_map );
+    bool status=get_parameters(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
 
-    get_parameters(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
+    if (status==false){
+      RCLCPP_INFO(get_logger(), "Trying to load parameters for servo_name failed");
+    }
 
-    RCLCPP_INFO(get_logger(), "Trying to load parameters for servo_name %s\n", servo_name.c_str());
+    RCLCPP_INFO(get_logger(), "Trying to load parameters for servo_name %s", servo_name.c_str());
     for(auto it = temp_map.begin(); it!=temp_map.end(); ++it)
     {
-      RCLCPP_INFO(get_logger(), "map key:%s, value: %f", it->first, it->second);
+      RCLCPP_INFO(get_logger(), "map key:%s, value: %f", it->first.c_str(), it->second);
     }
-    smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
+    //smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
   }
 }
 

@@ -656,6 +656,7 @@ bool config_servos(const std::shared_ptr<i2cpwmboard::srv::ServosConfig::Request
                    std::shared_ptr<i2cpwmboard::srv::ServosConfig::Response> res)
 {
   /* this service works on the active_board */
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Enter into config servos");
   int i;
 
   res->error = 0;
@@ -675,7 +676,7 @@ bool config_servos(const std::shared_ptr<i2cpwmboard::srv::ServosConfig::Request
     int center = req->servos[i].center;
     int range = req->servos[i].range;
     int direction = req->servos[i].direction;
-
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "receive request sevo num:  [%d], range: [%d], center: [%d], direction: [%d]", servo, range,center,direction);
     _config_servo(servo, center, range, direction);
   }
 

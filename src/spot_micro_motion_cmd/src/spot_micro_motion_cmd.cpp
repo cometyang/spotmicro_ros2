@@ -483,7 +483,7 @@ void SpotMicroMotionCmd::readInConfigParameters()
     {
       RCLCPP_INFO(get_logger(), "map key:%s, value: %f", it->first.c_str(), it->second);
     }
-    //smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
+    smnc_.servo_config[servo_name] = temp_map;  // Assing in servo config to map in the struct
   }
 }
 

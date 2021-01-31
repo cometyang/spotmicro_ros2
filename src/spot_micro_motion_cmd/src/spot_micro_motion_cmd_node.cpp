@@ -19,9 +19,10 @@ int main(int argc, char** argv) {
     float duration = node->getNodeConfig().dt;
     float rate = 1.0/duration;
    
-    
+    RCLCPP_INFO(node->get_logger(), "set rate to %f", rate);
     rclcpp::Rate loop_rate(rate);
-
+    //rclcpp::executors::SingleThreadedExecutor executor;
+    // executor.add_node(node);
     if (node->publishServoConfiguration()) {
         bool debug_mode = node->getNodeConfig().debug_mode;
         rclcpp::Time begin;
@@ -32,6 +33,7 @@ int main(int argc, char** argv) {
                   begin =node->now();
             }
             node->runOnce();
+            
             rclcpp::spin_some(node);
             loop_rate.sleep();
 

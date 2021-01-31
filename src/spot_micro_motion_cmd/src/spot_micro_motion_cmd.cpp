@@ -202,7 +202,7 @@ bool SpotMicroMotionCmd::publishServoConfiguration()
     temp_servo_config.servo = servo_config_params["num"];
     temp_servo_config.direction = servo_config_params["direction"];
     request->servos.push_back(temp_servo_config);
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "sevo num:  [%ld]", temp_servo_config.servo);
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "sevo num:  [%d], range: [%d], center: [%d], direction: [%d]",temp_servo_config.servo, temp_servo_config.range, temp_servo_config.center, temp_servo_config.direction);
   }
 
     while (!servos_config_client_->wait_for_service(1s)) {

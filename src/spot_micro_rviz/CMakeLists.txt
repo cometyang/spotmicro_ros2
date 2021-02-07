@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(spot_micro_viz)
+project(spot_micro_rviz)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
